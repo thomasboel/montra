@@ -1,0 +1,41 @@
+{
+  "name": "serval",
+  "version": "1.0.0",
+  "description": "interact with your local development environment",
+  "main": "bin/index.ts",
+  "scripts": {
+    "build": "tsc && cp package.json dist/",
+    "dev": "tsc --watch"
+  },
+  "author": "thomas@boelmicheelsen.dk",
+  "license": "ISC",
+  "dependencies": {
+    "@commander-js/extra-typings": "^13.1.0",
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0",
+    "conf": "^13.1.0",
+    "dockerode": "^4.0.5",
+    "dockerode-compose": "^1.4.0",
+    "figlet": "^1.8.1",
+    "inquirer": "^12.5.2",
+    "js-yaml": "^4.1.0",
+    "node-tmux": "^1.0.2",
+    "ora": "^8.2.0"
+  },
+  "bin": {
+    "svl": "dist/bin/index.js"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@types/chalk": "^2.2.4",
+    "@types/commander": "^2.12.5",
+    "@types/dockerode": "^3.3.37",
+    "@types/dockerode-compose": "^1.4.1",
+    "@types/inquirer": "^9.0.7",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.14.1",
+    "prettier": "^3.5.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}
