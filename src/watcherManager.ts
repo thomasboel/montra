@@ -3,7 +3,7 @@ import { newSession, windowExists } from './lib/tmux/tmux.js';
 import store from './utils/store.js';
 import { isCommandAvailable } from './lib/exec.js';
 
-const WATCHER_SESSION = 'serval_internal';
+const WATCHER_SESSION = 'montra_internal';
 const WATCHER_WINDOW = 'watcher';
 
 export async function ensureWatcherRunning() {
@@ -25,7 +25,7 @@ export async function ensureWatcherRunning() {
     windowName: WATCHER_WINDOW,
     entrypoint: path.resolve(
       store.get('repositoryDirectory'),
-      'serval',
+      'montra',
     ),
     command: `node dist/src/watcher.js`,
     keepOpen: false,

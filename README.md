@@ -1,4 +1,4 @@
-# Serval CLI Tool
+# Montra CLI Tool
 
 CLI tool for managing arbitrary services running locally.  
 Services can with ease be started, stopped or restarted.  
@@ -9,7 +9,7 @@ Configuration that allows grouping of just the services you need to run on a day
 - [jq](https://jqlang.org/download/) - like `sed`, but for JSON data
 
 The default configuration uses [tmux](https://github.com/tmux/tmux/wiki).  
-If you don't want to use tmux you can change the runtime with: `svl config set runtime <runtime>`.  
+If you don't want to use tmux you can change the runtime with: `mon config set runtime <runtime>`.  
 Currently supported runtimes: `[ 'docker', 'tmux' ]`.
 
 _However, `tmux` is still required for the watcher at the moment._
@@ -71,18 +71,18 @@ setDebug(true);
 
 # CLI Usage
 
-Since this is subject to evolve and change over time, refer to `svl --help`.  
+Since this is subject to evolve and change over time, refer to `mon --help`.  
 This also works out the box for new and existing commands.
 
 ## Managing services
 
 ### Services
  
-`svl service add --help` to see how to add a new service to the configuration.
+`mon service add --help` to see how to add a new service to the configuration.
 
 ### Groups
 
 Services can be added to groups that can easily be shared with others with export/import capabilities.  
-`svl group create backend` will create a group with the name `tprm`.  
-`svl group add backend postgres my-service other-service ...` will add services to the group.  
-`svl group start backend` will start all the services in the group.
+`mon group create backend` will create a group with the name `tprm`.  
+`mon group add backend postgres my-service other-service ...` will add services to the group.  
+`mon group start backend` will start all the services in the group.

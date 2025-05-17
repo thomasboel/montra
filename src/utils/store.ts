@@ -65,7 +65,7 @@ export const configValidators: {
 };
 
 const store = new Conf<Config>({
-  projectName: 'serval',
+  projectName: 'montra',
   projectVersion: version,
   migrations: storeMigrations,
   defaults: {

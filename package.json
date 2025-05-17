@@ -1,5 +1,5 @@
 {
-  "name": "serval",
+  "name": "montra",
   "version": "1.0.0",
   "description": "interact with your local development environment",
   "main": "bin/index.ts",

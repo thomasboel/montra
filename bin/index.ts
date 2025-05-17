@@ -13,7 +13,7 @@ import { version } from '../src/utils/pkgVersion.js';
 import { ensureWatcherRunning } from '../src/watcherManager.js';
 
 program
-  .name('serval')
+  .name('montra')
   .version(version)
   .description('interact with your local development environment')
   .addCommand(config)

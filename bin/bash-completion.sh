@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-_svl_completions() {
+_montra_completions() {
   local cur prev
   cur="${COMP_WORDS[COMP_CWORD]}"
   prev="${COMP_WORDS[COMP_CWORD - 1]}"
@@ -13,16 +13,16 @@ _svl_completions() {
   CONFIG_PATH=""
 
   # Try macOS path
-  if [ -f "$HOME/Library/Preferences/serval-nodejs/config.json" ]; then
-    CONFIG_PATH="$HOME/Library/Preferences/serval-nodejs/config.json"
+  if [ -f "$HOME/Library/Preferences/montra-nodejs/config.json" ]; then
+    CONFIG_PATH="$HOME/Library/Preferences/montra-nodejs/config.json"
 
   # Try Linux path
-  elif [ -f "$HOME/.config/serval-nodejs/config.json" ]; then
-    CONFIG_PATH="$HOME/.config/serval-nodejs/config.json"
+  elif [ -f "$HOME/.config/montra-nodejs/config.json" ]; then
+    CONFIG_PATH="$HOME/.config/montra-nodejs/config.json"
 
   # Try Windows path via WSL or Git Bash
-  elif [ -f "/c/Users/$USERNAME/AppData/Roaming/serval-nodejs/config.json" ]; then
-    CONFIG_PATH="/c/Users/$USERNAME/AppData/Roaming/serval-nodejs/config.json"
+  elif [ -f "/c/Users/$USERNAME/AppData/Roaming/montra-nodejs/config.json" ]; then
+    CONFIG_PATH="/c/Users/$USERNAME/AppData/Roaming/montra-nodejs/config.json"
 
   # Fallback: use CLI to print path or output config
   else
@@ -74,7 +74,4 @@ _svl_completions() {
   esac
 }
 
-autoload -Uz compinit
-compinit
-autoload bashcompinit && bashcompinit
-complete -F _svl_completions svl
+complete -F _montra_completions mon
