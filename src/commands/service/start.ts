@@ -10,14 +10,18 @@ import { withErrorHandler } from '../../utils/errorHandler.js';
 import store, { Service } from '../../utils/store.js';
 import { getPulledImages } from '../../lib/docker/docker.js';
 
-export async function start(serviceName: string): Promise<void> {
-  if (serviceName === 'all') {
-    for (const service of store.get('services')) {
-      await start(service.name);
-    }
+export async function start(serviceNames: string[]): Promise<void> {
+  if (serviceNames[0] === 'all') {
+    await start(store.get('services').map((s) => s.name));
     return;
   }
 
+  for (const serviceName of serviceNames) {
+    await startInternal(serviceName);
+  }
+}
+
+async function startInternal(serviceName: string): Promise<void> {
   if ((await getServiceStatus(serviceName)) === 'RUNNING') {
     return;
   }
@@ -104,10 +108,7 @@ async function startTmuxService(service: Service): Promise<void> {
   const result = await newWindow({
     sessionName: service.type,
     windowName: service.alias ?? service.name,
-    entrypoint: path.join(
-      store.get('repositoryDirectory'),
-      service.repository,
-    ),
+    entrypoint: path.join(store.get('repositoryDirectory'), service.repository),
     command: service.runCommand,
   });
 
@@ -164,6 +165,6 @@ async function startDockerService(service: Service): Promise<void> {
 }
 
 export default new Command('start')
-  .description('Start a service')
-  .argument('<service>')
+  .description('Start services')
+  .argument('<services...>', 'ne or more services to start')
   .action(withErrorHandler(start));

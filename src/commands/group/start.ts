@@ -1,6 +1,6 @@
 import { Command } from '@commander-js/extra-typings';
 
-import { start as startService } from '../service/start.js';
+import { start as startServices } from '../service/start.js';
 import store from '../../utils/store.js';
 import { withErrorHandler } from '../../utils/errorHandler.js';
 
@@ -17,9 +17,7 @@ export async function start(serviceGroupName: string): Promise<void> {
     );
   }
 
-  for (const service of serviceGroup.services) {
-    await startService(service);
-  }
+  await startServices(serviceGroup.services);
 }
 
 export default new Command('start')

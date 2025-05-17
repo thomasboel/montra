@@ -1,6 +1,6 @@
 import { Command } from '@commander-js/extra-typings';
 
-import { stop as stopService } from '../service/stop.js';
+import { stop as stopServices } from '../service/stop.js';
 import store from '../../utils/store.js';
 import { withErrorHandler } from '../../utils/errorHandler.js';
 
@@ -17,9 +17,7 @@ export async function stop(serviceGroupName: string): Promise<void> {
     );
   }
 
-  for (const service of serviceGroup.services) {
-    await stopService(service);
-  }
+  await stopServices(serviceGroup.services);
 }
 
 export default new Command('stop')

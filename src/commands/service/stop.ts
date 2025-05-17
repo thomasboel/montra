@@ -8,14 +8,18 @@ import { dockerComposeStop } from '../../lib/docker/dockerCompose.js';
 import { stopContainerByPort } from '../../lib/docker/docker.js';
 import { findComposeServiceByImage } from '../../utils/findComposeServiceByImage.js';
 
-export async function stop(serviceName: string): Promise<void> {
-  if (serviceName === 'all') {
-    for (const service of store.get('services')) {
-      await stop(service.name);
-    }
+export async function stop(serviceNames: string[]): Promise<void> {
+  if (serviceNames[0] === 'all') {
+    await stop(store.get('services').map((s) => s.name));
     return;
   }
 
+  for (const serviceName of serviceNames) {
+    await stopInternal(serviceName);
+  }
+}
+
+async function stopInternal(serviceName: string): Promise<void> {
   const service = store
     .get('services')
     .find((s) => [s.name, s.alias].includes(serviceName));
@@ -125,6 +129,6 @@ async function stopDockerService(service: Service): Promise<void> {
 }
 
 export default new Command('stop')
-  .description('Stop a service')
-  .argument('<service>')
+  .description('Stop services')
+  .argument('<services...>')
   .action(withErrorHandler(stop));

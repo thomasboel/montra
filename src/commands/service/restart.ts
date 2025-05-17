@@ -5,19 +5,17 @@ import { start } from './start.js';
 import { withErrorHandler } from '../../utils/errorHandler.js';
 import store from '../../utils/store.js';
 
-export async function restart(serviceName: string): Promise<void> {
-  if (serviceName === 'all') {
-    for (const service of store.get('services')) {
-      await restart(service.name);
-    }
+export async function restart(serviceNames: string[]): Promise<void> {
+  if (serviceNames[0] === 'all') {
+    await restart(store.get('services').map((s) => s.name));
     return;
   }
 
-  await stop(serviceName);
-  await start(serviceName);
+  await stop(serviceNames);
+  await start(serviceNames);
 }
 
 export default new Command('restart')
-  .description('Restart a service')
-  .argument('<service>')
+  .description('Restart services')
+  .argument('<services...>')
   .action(withErrorHandler(restart));
