@@ -42,9 +42,22 @@ export async function update(
 
   spinner.text = `Updating ${packageName}...`;
 
+  const gitPullResult = await execute('git pull', { cwd: repoPath });
+
+  if (!gitPullResult.success) {
+    spinner.clear();
+    throw new Error(
+      `Failed to pull from the repository: ${gitPullResult.error.error.message}`,
+    );
+  }
+
+  if (gitPullResult.stdout.includes('Already up to date.')) {
+    spinner.succeed(`✅ ${packageName} is already up to date.`);
+    return;
+  }
+
   const command = `export NVM_DIR="$HOME/.nvm"; \
   [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"; \
-  git pull; \
   nvm install; \
   nvm use; \
   npm install`;
@@ -58,7 +71,7 @@ export async function update(
   if (!result.success) {
     spinner.clear();
     throw new Error(
-      `Failed to update the _package. Error: ${result.error.error.message}`,
+      `Failed to update the package. Error: ${result.error.error.message}`,
     );
   }
 

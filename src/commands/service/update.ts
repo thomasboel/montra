@@ -44,12 +44,27 @@ export async function update(
 
   spinner.text = `Updating ${serviceName}...`;
 
+  const gitPullResult = await execute('git pull', { cwd: repoPath });
+
+  if (!gitPullResult.success) {
+    spinner.clear();
+    throw new Error(
+      `Failed to pull from the repository: ${gitPullResult.error.error.message}`,
+    );
+  }
+
+  if (gitPullResult.stdout.includes('Already up to date.')) {
+    spinner.succeed(`✅ ${serviceName} is already up to date.`);
+    return;
+  }
+
+  const usePnpm = service.runCommand?.includes('pnpm') ?? false;
+
   const command = `export NVM_DIR="$HOME/.nvm"; \
   [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"; \
-  git pull; \
   nvm install; \
   nvm use; \
-  npm install`;
+  ${usePnpm ? 'pnpm' : 'npm'} install`;
 
   const fullCommand = `zsh -c "${command.replace(/"/g, '\\"')}"`;
 
