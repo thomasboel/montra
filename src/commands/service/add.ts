@@ -18,11 +18,11 @@ export async function add({
 }: {
   name: string;
   type: ServiceType;
-  repository: string;
-  alias: string;
-  port: string;
-  cmd: string;
-  expectedSecondsToStart: string;
+  repository?: string;
+  alias?: string;
+  port?: string;
+  cmd?: string;
+  expectedSecondsToStart?: string;
 }): Promise<void> {
   const services = store.get('services') ?? [];
 

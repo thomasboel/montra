@@ -21,7 +21,7 @@ export async function _import(
 
     if (groupAlreadyExists && !force) {
       console.warn(
-        `Skipping import of service group with the name "${serviceGroupToCreate.name}" since it already exists. Use --force to force an overwrite of the existing service groups.`,
+        `ℹ️ Skipping import of service group with the name "${serviceGroupToCreate.name}" since it already exists. Use --force to force an overwrite of the existing service groups.`,
       );
       continue;
     }

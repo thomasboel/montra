@@ -5,6 +5,8 @@ import info from './info.js';
 import add from './add.js';
 import remove from './remove.js';
 import update from './update.js';
+import _export from './export.js';
+import _import from './import.js';
 
 export default new Command('package')
   .description('Manage groups')
@@ -12,4 +14,6 @@ export default new Command('package')
   .addCommand(info)
   .addCommand(add)
   .addCommand(remove)
-  .addCommand(update);
+  .addCommand(update)
+  .addCommand(_export)
+  .addCommand(_import);

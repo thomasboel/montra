@@ -9,6 +9,8 @@ import add from './add.js';
 import remove from './remove.js';
 import update from './update.js';
 import info from './info.js';
+import _export from './export.js';
+import _import from './import.js';
 
 export default new Command('service')
   .description('Manage services')
@@ -20,6 +22,8 @@ export default new Command('service')
   .addCommand(add)
   .addCommand(remove)
   .addCommand(update)
-  .addCommand(info);
+  .addCommand(info)
+  .addCommand(_export)
+  .addCommand(_import);
 
 // TODO: Add import and export commands
