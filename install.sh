@@ -9,7 +9,7 @@ REPO_DIR=${REPO_DIR:-$HOME/repos}
 
 # Set variables
 BIN_DIR="$HOME/bin"
-WRAPPER_PATH="$BIN_DIR/mon"
+WRAPPER_PATH="$BIN_DIR/$CLI_ALIAS"
 WRAPPER_CONTENT='#!/bin/zsh
 
 export NVM_DIR="$HOME/.nvm"
@@ -52,5 +52,8 @@ fi
 # 5. Source the updated .zshrc
 echo "🔄 Reloading shell config..."
 source "$ZSHRC"
+
+# 6. Replace mon with CLI_ALIAS in completion file
+sed -i.bak 's/^complete -F _montra_completions mon$/complete -F _montra_completions '$CLI_ALIAS'/g' "$REPO_DIR/montra/bin/bash-completion.sh"
 
 echo "🎉 Setup complete! You can now use \`$CLI_ALIAS\` anywhere."
