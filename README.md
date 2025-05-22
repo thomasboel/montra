@@ -22,12 +22,12 @@ _However, `tmux` is still required for the watcher at the moment._
 
 ### MacOS / Linux
 
-1. Add the following to your `~/.zshrc` / `~/.bashrc`: `export REPO_DIR=/path/to/repos`
-2. `npm link` - If you always want the CLI available, run `zsh install.sh` (since `npm link` only links it on one version of `npm`)
+1. run `zsh install.sh`
 
-### Windows
+### Windows (Untested)
 
-1. `npm link` - If you always want the CLI available you will have to do something similar to what the `install.sh` script does. (might be able to use the npm package `pkg` to create an executable, though that might require having to change the tsconfig module to CommonJS).
+1. Make the path where your repos are available at the environment variable `REPO_DIR`
+2. `npm link` - If you always want the CLI available you will have to do something similar to what the `install.sh` script does. (might be able to use the npm package `pkg` to create an executable, though that might require having to change the tsconfig module to CommonJS).
 
 ## Local Development
 
