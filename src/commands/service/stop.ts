@@ -15,11 +15,11 @@ export async function stop(serviceNames: string[]): Promise<void> {
   }
 
   for (const serviceName of serviceNames) {
-    await stopInternal(serviceName);
+    await stopService(serviceName);
   }
 }
 
-async function stopInternal(serviceName: string): Promise<void> {
+async function stopService(serviceName: string): Promise<void> {
   const service = store
     .get('services')
     .find((s) => [s.name, s.alias].includes(serviceName));

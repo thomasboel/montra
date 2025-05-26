@@ -17,11 +17,11 @@ export async function start(serviceNames: string[]): Promise<void> {
   }
 
   for (const serviceName of serviceNames) {
-    await startInternal(serviceName);
+    await startService(serviceName);
   }
 }
 
-async function startInternal(serviceName: string): Promise<void> {
+async function startService(serviceName: string): Promise<void> {
   if ((await getServiceStatus(serviceName)) === 'RUNNING') {
     return;
   }
@@ -166,5 +166,5 @@ async function startDockerService(service: Service): Promise<void> {
 
 export default new Command('start')
   .description('Start services')
-  .argument('<services...>', 'ne or more services to start')
+  .argument('<services...>', 'one or more services to start')
   .action(withErrorHandler(start));
