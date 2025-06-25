@@ -17,6 +17,7 @@ type ServiceInfo = {
   repository: string;
   branch: string;
   version: string;
+  nodeVersion: string;
   runCommand?: string;
   expectedSecondsToStart?: number;
   port?: number;
@@ -79,6 +80,12 @@ async function getServiceInfo({
     ? projectVersionResult.stdout.trim()
     : '⚠️ Could not determine the project version';
 
+  const nodeVersionResult = await execute('cat .nvmrc', { cwd: repoPath });
+
+  const nodeVersion = nodeVersionResult.success
+    ? nodeVersionResult.stdout.trim()
+    : '⚠️ Could not determine the node version';
+
   return {
     service: service.name,
     alias: service.alias,
@@ -87,6 +94,7 @@ async function getServiceInfo({
     repository: repoPath,
     branch: currentWorkingBranch,
     version: projectVersion,
+    nodeVersion,
     runCommand: service.runCommand,
     expectedSecondsToStart: service.expectedSecondsToStart,
     port: service.port,
@@ -101,6 +109,10 @@ function printServiceInfo(serviceInfo: ServiceInfo): void {
   prettyPrintKeyValue('📁 Repository', chalk.dim(serviceInfo.repository));
   prettyPrintKeyValue('🌿 Branch', chalk.green(serviceInfo.branch));
   prettyPrintKeyValue('🧾 Version', chalk.magenta(serviceInfo.version));
+  prettyPrintKeyValue(
+    '🧾 Node Version',
+    chalk.magenta(serviceInfo.nodeVersion),
+  );
   prettyPrintKeyValue('🚀 Start Command', chalk.cyan(serviceInfo.runCommand));
   prettyPrintKeyValue(
     '⏱️ Expected Startup Time',

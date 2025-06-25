@@ -13,6 +13,7 @@ type PackageInfo = {
   repository: string;
   branch: string;
   version: string;
+  nodeVersion: string;
 };
 
 export async function info(
@@ -68,11 +69,18 @@ async function getPackageInfo({
     ? projectVersionResult.stdout.trim()
     : '⚠️ Could not determine the project version';
 
+  const nodeVersionResult = await execute('cat .nvmrc', { cwd: repoPath });
+
+  const nodeVersion = nodeVersionResult.success
+    ? nodeVersionResult.stdout.trim()
+    : '⚠️ Could not determine the node version';
+
   return {
     package: _package.name,
     repository: repoPath,
     branch: currentWorkingBranch,
     version: projectVersion,
+    nodeVersion,
   };
 }
 
