@@ -1,16 +1,26 @@
 import { Command } from '@commander-js/extra-typings';
 import * as tmux from '../../lib/tmux/tmux.js';
 
-const listSessions = new Command('listSessions').action(async () => {
-  const result = await tmux.listSessions();
+const listSessions = new Command('listSessions')
+  .option(
+    '-j, --json',
+    'print sessions as stringified json to allow jq piping',
+  )
+  .action(async ({ json }) => {
+    const result = await tmux.listSessions();
 
-  if (!result.success) {
-    console.error(result.error.error.message);
-    return;
-  }
+    if (!result.success) {
+      console.error(result.error.error.message);
+      return;
+    }
 
-  console.log(result.data);
-});
+    if (json) {
+      console.log(JSON.stringify(result.data, null, 2));
+      return;
+    }
+
+    console.log(result.data);
+  });
 
 const newSessions = new Command('newSession')
   .argument('<string>', 'name')
@@ -64,12 +74,21 @@ const newWindow = new Command('newWindow')
   });
 
 const listWindows = new Command('listWindows')
+  .option(
+    '-j, --json',
+    'print windows as stringified json to allow jq piping',
+  )
   .argument('<string>', 'session')
-  .action(async (session) => {
+  .action(async (session, { json }) => {
     const result = await tmux.listWindows(session);
 
     if (!result.success) {
       console.error(result.error.error.message);
+      return;
+    }
+
+    if (json) {
+      console.log(JSON.stringify(result.data, null, 2));
       return;
     }
 
