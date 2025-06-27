@@ -1,4 +1,5 @@
 import { Command } from '@commander-js/extra-typings';
+import path from 'node:path';
 
 import { execute } from '../../lib/exec.js';
 import { listWindows } from '../../lib/tmux/tmux.js';
@@ -40,6 +41,10 @@ export async function getServiceStatus(
   }
 
   if (service.port) {
+    if (await checkLivenessProbe(service)) {
+      return 'RUNNING';
+    }
+
     const result = await execute(`lsof -n -i :${service.port} | grep LISTEN`);
 
     if (!result.success || !result.stdout) {
@@ -54,6 +59,29 @@ export async function getServiceStatus(
   }
 
   return 'STOPPED';
+}
+
+async function checkLivenessProbe(service: Service): Promise<boolean> {
+  const repoPath = path.join(
+    store.get('repositoryDirectory'),
+    service.repository,
+  );
+
+  const livenessProbeUrlFromDeploymentFileResult = await execute(
+    `yq 'select(.kind == "Deployment") | .spec.template.spec.containers[0].livenessProbe.httpGet.path' ${repoPath}/deployment/production/${service.repository}.yaml`,
+  );
+
+  if (livenessProbeUrlFromDeploymentFileResult.success) {
+    const result = await execute(
+      `curl --fail --silent --output /dev/null http://localhost:${service.port}${livenessProbeUrlFromDeploymentFileResult.stdout.trim()}`,
+    );
+
+    if (result.success) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 async function checkServiceSessionExists(service: Service): Promise<boolean> {
