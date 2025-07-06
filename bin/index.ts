@@ -8,6 +8,7 @@ import group from '../src/commands/group/index.js';
 import _package from '../src/commands/package/index.js';
 import tmuxTest from '../src/commands/internal/tmuxTest.js';
 import dockerTest from '../src/commands/internal/dockerTest.js';
+import autocomplete from '../src/commands/internal/autocomplete.js';
 
 import { version } from '../src/utils/pkgVersion.js';
 import { ensureWatcherRunning } from '../src/watcherManager.js';
@@ -21,10 +22,13 @@ program
   .addCommand(group)
   .addCommand(_package)
   .addCommand(tmuxTest) // For testing the tmux library
-  .addCommand(dockerTest); // For testing the docker library
+  .addCommand(dockerTest) // For testing the docker library
+  .addCommand(autocomplete); // Autocomplete command
 
 program.hook('preAction', async () => {
   await ensureWatcherRunning();
 });
 
 program.parse(process.argv);
+
+export default program;
