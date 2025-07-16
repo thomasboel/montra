@@ -46,7 +46,7 @@ async function getServiceGroupInfo({
 
   return {
     serviceGroup: serviceGroup.name,
-    services: serviceGroup.services,
+    services: serviceGroup.services.sort(),
   };
 }
 
@@ -67,13 +67,21 @@ async function printInfoOnAllServiceGroups({ json }: { json: boolean }) {
         .map((p) => getServiceGroupInfo({ serviceGroupName: p.name })),
     );
 
+    const sortedServiceGroupsInfo = serviceGroupsInfo.sort((a, b) =>
+      a.serviceGroup.localeCompare(b.serviceGroup),
+    );
+
     spinner.clear();
 
-    console.log(JSON.stringify(serviceGroupsInfo, null, 2));
+    console.log(JSON.stringify(sortedServiceGroupsInfo, null, 2));
     process.exit(0);
   }
 
-  for (const serviceGroup of store.get('serviceGroups')) {
+  const sortedServiceGroups = store
+    .get('serviceGroups')
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  for (const serviceGroup of sortedServiceGroups) {
     const serviceGroupInfo = await getServiceGroupInfo({
       serviceGroupName: serviceGroup.name,
     });

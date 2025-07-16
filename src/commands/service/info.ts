@@ -72,7 +72,7 @@ async function getServiceInfo({
     : '⚠️ Could not determine the current working branch';
 
   const projectVersionResult = await execute(
-    "cat package.json | grep '\"version\"' | cut -c 15- | rev | cut -c 3- | rev",
+    'cat package.json | grep \'"version"\' | cut -c 15- | rev | cut -c 3- | rev',
     { cwd: repoPath },
   );
 
@@ -142,13 +142,21 @@ async function printInfoOnAllServices({
         ),
     );
 
+    const sortedServicesInfo = servicesInfo.sort((a, b) =>
+      a.service.localeCompare(b.service),
+    );
+
     spinner.clear();
 
-    console.log(JSON.stringify(servicesInfo, null, 2));
+    console.log(JSON.stringify(sortedServicesInfo, null, 2));
     process.exit(0);
   }
 
-  for (const service of store.get('services')) {
+  const sortedServices = store
+    .get('services')
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  for (const service of sortedServices) {
     const serviceInfo = await getServiceInfo({
       serviceName: service.name,
       status,

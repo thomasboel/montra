@@ -18,7 +18,11 @@ export const statusMap: Record<ServiceStatus, string> = {
 
 export async function status(serviceName: string): Promise<void> {
   if (serviceName === 'all') {
-    for (const service of store.get('services')) {
+    const sortedServices = store
+      .get('services')
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    for (const service of sortedServices) {
       await status(service.name);
     }
     return;

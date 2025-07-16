@@ -61,7 +61,7 @@ async function getPackageInfo({
     : '⚠️ Could not determine the current working branch';
 
   const projectVersionResult = await execute(
-    "cat package.json | grep '\"version\"' | cut -c 15- | rev | cut -c 3- | rev",
+    'cat package.json | grep \'"version"\' | cut -c 15- | rev | cut -c 3- | rev',
     { cwd: repoPath },
   );
 
@@ -99,13 +99,21 @@ async function printInfoOnAllPackages({ json }: { json: boolean }) {
       store.get('packages').map((p) => getPackageInfo({ packageName: p.name })),
     );
 
+    const sortedPackagesInfo = packagesInfo.sort((a, b) =>
+      a.package.localeCompare(b.package),
+    );
+
     spinner.clear();
 
-    console.log(JSON.stringify(packagesInfo, null, 2));
+    console.log(JSON.stringify(sortedPackagesInfo, null, 2));
     process.exit(0);
   }
 
-  for (const _package of store.get('packages')) {
+  const sortedPackages = store
+    .get('packages')
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  for (const _package of sortedPackages) {
     const packageInfo = await getPackageInfo({
       packageName: _package.name,
     });

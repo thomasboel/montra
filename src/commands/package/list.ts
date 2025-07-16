@@ -6,7 +6,9 @@ import { withErrorHandler } from '../../utils/errorHandler.js';
 export async function list(): Promise<void> {
   const packages = store.get('packages') ?? [];
 
-  for (const _package of packages) {
+  const sortedPackages = packages.sort((a, b) => a.name.localeCompare(b.name));
+
+  for (const _package of sortedPackages) {
     console.log(_package.name);
   }
 }

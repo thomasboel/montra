@@ -6,7 +6,11 @@ import { withErrorHandler } from '../../utils/errorHandler.js';
 export async function list(): Promise<void> {
   const serviceGroups = store.get('serviceGroups') ?? [];
 
-  for (const serviceGroup of serviceGroups) {
+  const sortedServiceGroups = serviceGroups.sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
+
+  for (const serviceGroup of sortedServiceGroups) {
     console.log(serviceGroup.name);
   }
 }
