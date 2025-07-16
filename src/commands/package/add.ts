@@ -30,7 +30,7 @@ const description = `
   Add a new package (* = required)
 
 Example:
-  svl package add --name workflow
+  mon package add --name workflow
   `.trim();
 
 export default new Command('add')

@@ -26,7 +26,7 @@ _montra_completions() {
 
   # Fallback: use CLI to print path or output config
   else
-    CONFIG_PATH="$(svl config path 2>/dev/null || echo "")"
+    CONFIG_PATH="$(mon config path 2>/dev/null || echo "")"
   fi
 
   local services

@@ -23,7 +23,7 @@
     "ora": "^8.2.0"
   },
   "bin": {
-    "svl": "dist/bin/index.js"
+    "mon": "dist/bin/index.js"
   },
   "type": "module",
   "devDependencies": {

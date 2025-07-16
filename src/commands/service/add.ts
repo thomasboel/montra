@@ -55,7 +55,7 @@ const description = `
   Add a new service (* = required)
 
 Example:
-  svl service add --name my-service --type backend_service --cmd "npm run start" --port 9090 --expected-seconds-to-start 8
+  mon service add --name my-service --type backend_service --cmd "npm run start" --port 9090 --expected-seconds-to-start 8
   `.trim();
 
 export default new Command('add')
