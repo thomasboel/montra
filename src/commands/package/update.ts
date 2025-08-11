@@ -71,7 +71,7 @@ export async function update(
   if (!result.success) {
     spinner.clear();
     throw new Error(
-      `Failed to update the package. Error: ${result.error.error.message}`,
+      `Failed to update the package: ${packageName}. Error: ${result.error.error.message}`,
     );
   }
 

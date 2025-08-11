@@ -75,7 +75,7 @@ export async function update(
   if (!result.success) {
     spinner.clear();
     throw new Error(
-      `Failed to update the service. Error: ${result.error.error.message}`,
+      `Failed to update the service: ${serviceName}. Error: ${result.error.error.message}`,
     );
   }
 
