@@ -61,7 +61,7 @@ async function getPackageInfo({
     : '⚠️ Could not determine the current working branch';
 
   const projectVersionResult = await execute(
-    'cat package.json | grep \'"version"\' | cut -c 15- | rev | cut -c 3- | rev',
+    'cat package.json | jq -r .version',
     { cwd: repoPath },
   );
 
