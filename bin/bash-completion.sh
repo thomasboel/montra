@@ -8,7 +8,7 @@ _montra_completions() {
   local root_actions=("service group package config tmux docker")
   local service_actions=("start stop restart status add remove update info export import vulnerabilities list")
   local group_actions=("create delete add remove list info export import start stop")
-  local package_actions=("add remove list info update export import")
+  local package_actions=("add remove list info update export import subscribe")
 
   CONFIG_PATH=""
 
