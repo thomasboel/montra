@@ -7,6 +7,7 @@ import remove from './remove.js';
 import update from './update.js';
 import _export from './export.js';
 import _import from './import.js';
+import subscribe from './subscribe.js';
 
 export default new Command('package')
   .description('Manage groups')
@@ -16,4 +17,5 @@ export default new Command('package')
   .addCommand(remove)
   .addCommand(update)
   .addCommand(_export)
-  .addCommand(_import);
+  .addCommand(_import)
+  .addCommand(subscribe);
