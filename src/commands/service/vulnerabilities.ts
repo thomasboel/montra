@@ -119,6 +119,7 @@ export async function vulnerabilities(
 
   const imageScanFindingsResult = await execute(
     `aws ecr describe-image-scan-findings --repository-name ${service.repository} --image-id imageTag=${ecrImageTag} --region eu-west-1`,
+    { maxBuffer: 10 * 1024 * 1024 },
   );
 
   if (!imageScanFindingsResult.success) {
@@ -204,7 +205,9 @@ function printVulnerabilityFinding(vulnerabilityInfo: VulnerabilityInfo): void {
 
 export default new Command('vulnerabilities')
   .alias('cve')
-  .description('List vulnerabilities (CVEs) for the given service. Only ECR image vulnerabilities are supported currently. Requires AWS CLI access.')
+  .description(
+    'List vulnerabilities (CVEs) for the given service. Only ECR image vulnerabilities are supported currently. Requires AWS CLI access.',
+  )
   .argument('<service>')
   .option(
     '-j, --json',
