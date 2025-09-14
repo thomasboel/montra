@@ -10,6 +10,7 @@ import remove from './remove.js';
 import update from './update.js';
 import info from './info.js';
 import vulnerabilities from './vulnerabilities.js';
+import modify from './modify.js';
 import _export from './export.js';
 import _import from './import.js';
 
@@ -25,7 +26,6 @@ export default new Command('service')
   .addCommand(update)
   .addCommand(info)
   .addCommand(vulnerabilities)
+  .addCommand(modify)
   .addCommand(_export)
   .addCommand(_import);
-
-// TODO: Add import and export commands
