@@ -67,7 +67,9 @@ export async function subscribe(packageName: string): Promise<void> {
 
     if (latestTag !== initialTag) {
       spinner.succeed(`New tag created: ${latestTag}`);
-      await notify(`New tag created: ${latestTag} for ${projectName}`);
+      await notify(
+        `New tag created: ${latestTag.replace(/"/g, '')} for ${projectName}`,
+      );
       break;
     }
 
