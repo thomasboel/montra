@@ -42,15 +42,13 @@ async function stopService(serviceName: string): Promise<void> {
     }
   }
 
-  const runtime = store.get('runtime');
-
-  switch (runtime) {
+  switch (service.runtime) {
     case 'tmux':
       return await stopTmuxService(service);
     case 'docker':
       return await stopDockerService(service);
     default:
-      throw new Error(`Invalid runtime "${runtime}" specified in config`);
+      throw new Error(`Unknown runtime "${service.runtime}" configured for service ${serviceName}`);
   }
 }
 

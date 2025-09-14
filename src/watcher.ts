@@ -5,7 +5,6 @@ import { notify } from './utils/notify.js';
 async function watcher() {
   // TODO: move startedServices to different config file
   const startedServices = store.get('startedServices');
-  const runtime = store.get('runtime');
 
   console.log(
     `[${new Date().toISOString()}] 👀 watching started services: `,
@@ -18,7 +17,8 @@ async function watcher() {
 
   for (const { service, startedAt } of startedServices) {
     const expected =
-      (service.expectedSecondsToStart ?? 10) * (runtime === 'docker' ? 3 : 1);
+      (service.expectedSecondsToStart ?? 10) *
+      (service.runtime === 'docker' ? 3 : 1);
     const isExpired = now > startedAt + expected * 1000;
 
     if (!isExpired) {

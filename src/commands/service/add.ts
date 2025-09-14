@@ -4,6 +4,7 @@ import store, {
   Service,
   SERVICE_TYPES,
   ServiceType,
+  Runtime,
 } from '../../utils/store.js';
 import { withErrorHandler } from '../../utils/errorHandler.js';
 
@@ -15,6 +16,7 @@ export async function add({
   port,
   cmd,
   expectedSecondsToStart,
+  runtime,
 }: {
   name: string;
   type: ServiceType;
@@ -23,6 +25,7 @@ export async function add({
   port?: string;
   cmd?: string;
   expectedSecondsToStart?: string;
+  runtime?: Runtime;
 }): Promise<void> {
   const services = store.get('services') ?? [];
 
@@ -44,6 +47,7 @@ export async function add({
     port: Number(port),
     runCommand: cmd,
     expectedSecondsToStart: Number(expectedSecondsToStart),
+    runtime: runtime ?? store.get('runtime'),
   };
 
   store.set('services', [...services, newService]);
@@ -76,4 +80,5 @@ export default new Command('add')
     '-e, --expected-seconds-to-start <seconds>',
     "Expected seconds for service to start (expose it's port)",
   )
+  .option('-R, --runtime <runtime>', 'Service runtime, e.g. "docker" or "tmux" (defaults to globally configured runtime)')
   .action(withErrorHandler(add));

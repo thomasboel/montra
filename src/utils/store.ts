@@ -4,12 +4,6 @@ import { version } from './pkgVersion.js';
 import { storeMigrations } from './storeMigrations.js';
 import { isFilePath } from './isFilePath.js';
 
-const START_TIMES = {
-  SHORT: 8,
-  MEDIUM: 16,
-  LONG: 32,
-} as const;
-
 export const SERVICE_TYPES = [
   'backend_service',
   'frontend_service',
@@ -19,6 +13,8 @@ export const SERVICE_TYPES = [
 
 export type ServiceType = (typeof SERVICE_TYPES)[number];
 
+export type Runtime = 'tmux' | 'docker';
+
 export type Service = {
   name: string;
   type: ServiceType;
@@ -27,6 +23,7 @@ export type Service = {
   alias?: string;
   port?: number;
   expectedSecondsToStart: number;
+  runtime?: Runtime;
 };
 
 export type StartedService = {
@@ -45,7 +42,7 @@ export type Package = {
 };
 
 export type Config = {
-  runtime: 'tmux' | 'docker';
+  runtime: Runtime;
   repositoryDirectory: string;
   services: Service[];
   startedServices: StartedService[];
