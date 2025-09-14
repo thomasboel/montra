@@ -27,7 +27,15 @@ export async function add(): Promise<void> {
       type: 'input',
       name: 'name',
       message: 'Service name',
-      validate: (name) => services.some((s) => s.name === name) ? `A service named "${name}" already exists.` : true,
+      validate: (name) => {
+        if (name.length === 0) {
+          return 'Service name cannot be empty.';
+        }
+        if (services.some((s) => s.name === name)) {
+          return `A service named "${name}" already exists.`;
+        }
+        return true;
+      },
     },
     {
       type: 'input',
