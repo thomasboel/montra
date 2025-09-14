@@ -24,7 +24,7 @@ export const statusMap: Record<ServiceStatus, string> = {
 
 export async function status(
   serviceName: string,
-  { watch = 2 }: { watch: number },
+  { watch }: { watch: number },
 ): Promise<void> {
   if (serviceName === 'all') {
     const sortedServices = store
