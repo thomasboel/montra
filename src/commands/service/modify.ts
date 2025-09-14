@@ -3,6 +3,7 @@ import { Command } from '@commander-js/extra-typings';
 import store, { RUNTIMES, SERVICE_TYPES } from '../../utils/store.js';
 import { withErrorHandler } from '../../utils/errorHandler.js';
 import inquirer from 'inquirer';
+import { getServiceStatus } from './status.js';
 
 export async function modify(serviceName: string): Promise<void> {
   const service = store
@@ -11,6 +12,12 @@ export async function modify(serviceName: string): Promise<void> {
 
   if (!service) {
     throw new Error(`Service with the name ${serviceName} does not exist`);
+  }
+
+  const serviceStatus = await getServiceStatus(serviceName);
+
+  if (serviceStatus !== 'STOPPED') {
+    throw new Error(`Please stop the service before modifying it`);
   }
 
   const updatedService = await inquirer.prompt([
@@ -66,7 +73,7 @@ export async function modify(serviceName: string): Promise<void> {
     },
   ]);
 
-  const updatedServices = store.get('services').map(service => {
+  const updatedServices = store.get('services').map((service) => {
     if (service.name === serviceName) {
       return updatedService;
     }
