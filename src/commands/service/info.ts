@@ -5,7 +5,7 @@ import chalk from 'chalk';
 import { execute } from '../../lib/exec.js';
 import { getServiceStatus, statusMap } from './status.js';
 import { withErrorHandler } from '../../utils/errorHandler.js';
-import store from '../../utils/store.js';
+import store, { Runtime } from '../../utils/store.js';
 import ora from 'ora';
 import { prettyPrintKeyValue } from '../../utils/prettyPrintKeyValue.js';
 
@@ -21,6 +21,7 @@ type ServiceInfo = {
   runCommand?: string;
   expectedSecondsToStart?: number;
   port?: number;
+  runtime?: Runtime;
 };
 
 export async function info(
@@ -98,6 +99,7 @@ async function getServiceInfo({
     runCommand: service.runCommand,
     expectedSecondsToStart: service.expectedSecondsToStart,
     port: service.port,
+    runtime: service.runtime,
   };
 }
 
@@ -122,6 +124,7 @@ function printServiceInfo(serviceInfo: ServiceInfo): void {
     '🔌 Exposed Port',
     chalk.blue(serviceInfo.port?.toString()),
   );
+  prettyPrintKeyValue('⚡️ Runtime', chalk.yellow(serviceInfo.runtime));
 }
 
 async function printInfoOnAllServices({
