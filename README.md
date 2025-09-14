@@ -80,23 +80,44 @@ This also works out the box for new and existing commands.
 
 ### Services
  
-`mon service add` To add new service.  
-`mon service list` To list services (`ls` alias).  
-`mon service remove <service>` To remove a service.  
-`mon service info <service>` To list the service configuration and information.  
-`mon service modify <service>` To change the service configuration.  
-`mon service start <service>` To start the service.  
-`mon service stop <service>` To stop the service.  
-`mon service restart <service>` To restart the service.  
-`mon service status <service>` To get the service status.  
-`mon service update <service>` To update the service (git pull > nvm install > nvm use > npm install).  
-`mon service vulnerabilities <service>` To list image vulnerabilities from AWS Inspector for the latest image tag (requires valid AWS session - `aws configure sso`).  
-`mon service export` Used for sharing service configurations with someone else.  
-`mon service import "<export-output>"` Import all services from someone else's configuration.  
+`mon service list` will list services (`ls` alias).  
+`mon service add` will prompt the creation of a new service.  
+`mon service remove <service>` will remove a service.  
+`mon service info <service>` will print the service configuration and information.  
+`mon service modify <service>` will change the service configuration.  
+`mon service start <service>` will start the service.  
+`mon service stop <service>` will stop the service.  
+`mon service restart <service>` will restart the service.  
+`mon service status <service>` will get the service status.  
+`mon service update <service>` will update the service (git pull > nvm install > nvm use > npm install).  
+`mon service vulnerabilities <service>` will list image vulnerabilities from AWS Inspector for the latest image tag (requires valid AWS session - `aws configure sso`).  
+`mon service export` used for sharing service configurations with someone else.  
+`mon service import "<export-output>"` import all services from someone else's configuration.  
 
 ### Groups
 
 Services can be added to groups that can easily be shared with others with export/import capabilities.  
-`mon group create backend` will create a group with the name `tprm`.  
-`mon group add backend postgres my-service other-service ...` will add services to the group.  
-`mon group start backend` will start all the services in the group.
+Also helps with separating services from different projects.  
+
+`mon group list` will list all the groups.  
+`mon group create backend` will create a group with the name `backend`.  
+`mon group add backend postgres my-service other-service ...` will add the services to the group with the name `backend`.  
+`mon group remove backend postgres my-service other-service ...` will remove the services from the group with the name `backend`.  
+`mon group start backend` will start all the services in the group with the name `backend`.  
+`mon group stop backend` will stop all the services in the group with the name `backend`.  
+`mon group info backend` will list all the services in the group with the name `backend`.  
+`mon group export` used for sharing group configurations with someone else.  
+`mon group import "<export-output>"` import all groups from someone else's configuration.  
+
+### Packages
+
+Packages are repositories that don't act as a deployable - e.g. a library.
+
+`mon package list` will list all the packages.  
+`mon package add` will prompt the creation of a new package.  
+`mon package remove <package>` will remove a package.  
+`mon package info <package>` will print the package configuration and information.  
+`mon package update <package>` will update the package (git pull > nvm install > nvm use > npm install).
+`mon package subscribe <package>` will notify when a new tag (version) is released for the given package (uses registry.npmjs.org to check dist tag)  
+`mon package export` used for sharing package configurations with someone else.  
+`mon package import "<export-output>"` import all packages from someone else's configuration.
