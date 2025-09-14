@@ -71,6 +71,8 @@ setDebug(true);
 
 # CLI Usage
 
+_This CLI Usage section assumes the CLI entrypoint is the default "mon" - swap with your entrypoint._ 
+
 Since this is subject to evolve and change over time, refer to `mon --help`.  
 This also works out the box for new and existing commands.
 
@@ -78,7 +80,19 @@ This also works out the box for new and existing commands.
 
 ### Services
  
-`mon service add --help` to see how to add a new service to the configuration.
+`mon service add` To add new service.  
+`mon service list` To list services (`ls` alias).  
+`mon service remove <service>` To remove a service.  
+`mon service info <service>` To list the service configuration and information.  
+`mon service modify <service>` To change the service configuration.  
+`mon service start <service>` To start the service.  
+`mon service stop <service>` To stop the service.  
+`mon service restart <service>` To restart the service.  
+`mon service status <service>` To get the service status.  
+`mon service update <service>` To update the service (git pull > nvm install > nvm use > npm install).  
+`mon service vulnerabilities <service>` To list image vulnerabilities from AWS Inspector for the latest image tag (requires valid AWS session - `aws configure sso`).  
+`mon service export` Used for sharing service configurations with someone else.  
+`mon service import "<export-output>"` Import all services from someone else's configuration.  
 
 ### Groups
 
