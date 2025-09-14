@@ -5,16 +5,89 @@ import store, {
   SERVICE_TYPES,
   ServiceType,
   Runtime,
+  RUNTIMES,
 } from '../../utils/store.js';
 import { withErrorHandler } from '../../utils/errorHandler.js';
+import inquirer from 'inquirer';
 
-export async function add({
+export async function add(): Promise<void> {
+  const services = store.get('services') ?? [];
+
+  const service: {
+    name: string;
+    alias: string;
+    type: ServiceType;
+    repository: string;
+    runCommand: string;
+    port: number;
+    expectedSecondsToStart: number;
+    runtime: Runtime;
+  } = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'name',
+      message: 'Service name',
+      validate: (name) => services.some((s) => s.name === name) ? `A service named "${name}" already exists.` : true,
+    },
+    {
+      type: 'input',
+      name: 'alias',
+      message: 'Service alias (optional)',
+    },
+    {
+      type: 'select',
+      name: 'type',
+      message: 'Service type',
+      choices: SERVICE_TYPES,
+    },
+    {
+      type: 'input',
+      name: 'repository',
+      message: 'Repository directory name (defaults to service name)',
+    },
+    {
+      type: 'input',
+      name: 'runCommand',
+      message: 'Service run command (e.g. "npm start")',
+    },
+    {
+      type: 'number',
+      name: 'port',
+      message: 'Service port',
+    },
+    {
+      type: 'number',
+      name: 'expectedSecondsToStart',
+      message: 'Expected seconds for service to start accepting requests',
+    },
+    {
+      type: 'select',
+      name: 'runtime',
+      message: 'Service runtime',
+      choices: RUNTIMES,
+      default: store.get('runtime'),
+    },
+  ]);
+
+  await addService({
+    name: service.name,
+    ...(service.alias ? { alias: service.alias } : {}),
+    type: service.type,
+    ...(service.repository ? { repository: service.repository } : {}),
+    port: service.port,
+    runCommand: service.runCommand,
+    expectedSecondsToStart: service.expectedSecondsToStart,
+    runtime: service.runtime,
+  });
+}
+
+export async function addService({
   name,
   alias,
   type,
   repository = name,
   port,
-  cmd,
+  runCommand,
   expectedSecondsToStart,
   runtime,
 }: {
@@ -22,11 +95,11 @@ export async function add({
   type: ServiceType;
   repository?: string;
   alias?: string;
-  port?: string;
-  cmd?: string;
-  expectedSecondsToStart?: string;
+  port?: number;
+  runCommand?: string;
+  expectedSecondsToStart: number;
   runtime?: Runtime;
-}): Promise<void> {
+}) {
   const services = store.get('services') ?? [];
 
   if (services.some((s) => s.name === name)) {
@@ -44,9 +117,9 @@ export async function add({
     alias,
     type,
     repository,
-    port: Number(port),
-    runCommand: cmd,
-    expectedSecondsToStart: Number(expectedSecondsToStart),
+    port,
+    runCommand,
+    expectedSecondsToStart,
     runtime: runtime ?? store.get('runtime'),
   };
 
@@ -55,30 +128,6 @@ export async function add({
   console.log(`✅ Added new service "${name}"`);
 }
 
-const description = `
-  Add a new service (* = required)
-
-Example:
-  mon service add --name my-service --type backend_service --cmd "npm run start" --port 9090 --expected-seconds-to-start 8
-  `.trim();
-
 export default new Command('add')
-  .description(description)
-  .requiredOption('-n, --name <name>', '* Service name')
-  .requiredOption(
-    '-t, --type <type>',
-    `* Service type (${SERVICE_TYPES.join(', ')})`,
-  )
-  .option(
-    '-r, --repository <repository>',
-    'Repository name (defaults to service name)',
-  )
-  .option('-a, --alias <alias>', 'Service alias')
-  .option('-c, --cmd <command>', 'Service run command (e.g "npm run start")')
-  .option('-p, --port <port>', 'Service port')
-  .option(
-    '-e, --expected-seconds-to-start <seconds>',
-    "Expected seconds for service to start (expose it's port)",
-  )
-  .option('-R, --runtime <runtime>', 'Service runtime, e.g. "docker" or "tmux" (defaults to globally configured runtime)')
+  .description('Add a new service')
   .action(withErrorHandler(add));

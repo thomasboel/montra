@@ -28,7 +28,7 @@ export type Service = {
   alias?: string;
   port?: number;
   expectedSecondsToStart: number;
-  runtime?: Runtime;
+  runtime: Runtime;
 };
 
 export type StartedService = {

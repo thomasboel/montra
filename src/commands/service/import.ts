@@ -2,7 +2,7 @@ import { Command } from '@commander-js/extra-typings';
 
 import store, { Service } from '../../utils/store.js';
 import { withErrorHandler } from '../../utils/errorHandler.js';
-import { add } from './add.js';
+import { addService } from './add.js';
 import { remove } from './remove.js';
 
 export async function _import(
@@ -29,14 +29,15 @@ export async function _import(
       await remove(serviceToAdd.name);
     }
 
-    await add({
+    await addService({
       name: serviceToAdd.name,
       type: serviceToAdd.type,
-      cmd: serviceToAdd.runCommand,
-      alias: serviceToAdd.alias,
-      port: serviceToAdd.port?.toString(),
-      expectedSecondsToStart: serviceToAdd.expectedSecondsToStart?.toString(),
+      runCommand: serviceToAdd.runCommand,
+      ...(serviceToAdd.alias ? { alias: serviceToAdd.alias } : {}),
+      ...(serviceToAdd.port ? { port: serviceToAdd.port } : {}),
+      expectedSecondsToStart: serviceToAdd.expectedSecondsToStart,
       repository: serviceToAdd.repository,
+      runtime: serviceToAdd.runtime,
     });
   }
 }
