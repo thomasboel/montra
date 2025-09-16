@@ -15,7 +15,11 @@ This allows running some services in docker and other services in tmux simultane
 New service command added to modify service configuration.  
 Usage: `mon service modify <service>`. Uses the `inquirer` package for a smooth UX.  
 
-The `mon service add` command was also updated, so now it uses `inquirer` instead of needing all configuration as command options & arguments.  
+The `mon service add` command was also updated, so now it uses `inquirer` instead of needing all configuration as command options & arguments.
+
+## Better imports
+All the import commands have been improved and now uses `inquirer` so the user has more control when importing someone else's configurations.  
+A `cliVersion: string` property was also added at the export stage, since future imports might need to take this into consideration. 
 
 ## Bug fixes
 - Fixed `mon service vulnerabilites <service>` command sometimes getting `dataRangeError [ERR_CHILD_PROCESS_STDIO_MAXBUFFER]: stdout maxBuffer length exceeded` by increasing maxBuffer for child_process.
