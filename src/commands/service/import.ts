@@ -79,6 +79,8 @@ export async function _import(
       runtime: serviceToImport.runtime,
     });
   }
+
+  console.log(`✅ Import done`);
 }
 
 export default new Command('import')

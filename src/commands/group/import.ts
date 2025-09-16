@@ -5,35 +5,78 @@ import { withErrorHandler } from '../../utils/errorHandler.js';
 import { create } from './create.js';
 import { add } from './add.js';
 import { _delete } from './delete.js';
+import inquirer from 'inquirer';
+import { padLabel } from '../../utils/prettyPrintKeyValue.js';
+import { remove } from '../service/remove.js';
+
+type ServiceGroupImport = ServiceGroup & { cliVersion: string };
 
 export async function _import(
   serviceGroupsImport: string,
   { force }: { force: boolean },
 ): Promise<void> {
-  const serviceGroups = store.get('serviceGroups') ?? [];
+  const serviceGroupsImports: ServiceGroupImport[] =
+    JSON.parse(serviceGroupsImport);
 
-  const serviceGroupsToCreate: ServiceGroup[] = JSON.parse(serviceGroupsImport);
+  console.clear();
 
-  for (const serviceGroupToCreate of serviceGroupsToCreate) {
-    const groupAlreadyExists = serviceGroups.some(
-      (serviceGroup) => serviceGroup.name === serviceGroupToCreate.name,
+  const { choices }: { choices: string[] } = await inquirer.prompt([
+    {
+      type: 'checkbox',
+      name: 'choices',
+      message: 'Select the service groups you wish to import',
+      choices: serviceGroupsImports.map(
+        (sg) =>
+          `${padLabel('name: ' + sg.name, 20)} services: ${sg.services.join(', ')}`,
+      ),
+      pageSize: 40,
+      loop: false,
+    },
+  ]);
+
+  console.clear();
+
+  const serviceGroupsToImport = choices
+    .map((choice) =>
+      serviceGroupsImports.find((serviceGroup) =>
+        choice.startsWith(`name: ${serviceGroup.name}`),
+      ),
+    )
+    .filter((serviceGroup) => serviceGroup !== undefined);
+
+  const existingServiceGroups = store.get('serviceGroups') ?? [];
+
+  for (const serviceGroupToImport of serviceGroupsToImport) {
+    const groupAlreadyExists = existingServiceGroups.some(
+      (serviceGroup) => serviceGroup.name === serviceGroupToImport.name,
     );
 
     if (groupAlreadyExists && !force) {
-      console.warn(
-        `ℹ️ Skipping import of service group with the name "${serviceGroupToCreate.name}" since it already exists. Use --force to force an overwrite of the existing service groups.`,
-      );
-      continue;
+      const { confirmed } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'confirmed',
+          message: `A service group with the name "${serviceGroupToImport.name}" already exists, do you wish to overwrite the existing service group?`,
+        },
+      ]);
+
+      if (confirmed) {
+        await _delete(serviceGroupToImport.name, { force: true });
+      } else {
+        continue;
+      }
     }
 
     if (groupAlreadyExists && force) {
-      await _delete(serviceGroupToCreate.name, { force });
+      await _delete(serviceGroupToImport.name, { force });
     }
 
-    await create(serviceGroupToCreate.name);
+    await create(serviceGroupToImport.name);
 
-    await add(serviceGroupToCreate.name, serviceGroupToCreate.services);
+    await add(serviceGroupToImport.name, serviceGroupToImport.services);
   }
+
+  console.log(`✅ Import done`);
 }
 
 export default new Command('import')
