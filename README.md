@@ -10,9 +10,10 @@ Configuration that allows grouping of just the services you need to run on a day
 
 The default configuration uses [tmux](https://github.com/tmux/tmux/wiki).  
 If you don't want to use tmux you can change the runtime with: `mon config set runtime <runtime>`.  
-Currently supported runtimes: `[ 'docker', 'tmux' ]`.
+Currently supported runtimes: `[ 'docker', 'tmux' ]`.  
+This is also configurable on the individual service.  
 
-_However, `tmux` is still required for the watcher at the moment._
+_`tmux` is still required for the watcher (explained later) at the moment._
 
 ## Installation
 
@@ -27,7 +28,7 @@ _However, `tmux` is still required for the watcher at the moment._
 ### Windows (Untested)
 
 1. Make the path where your repos are available at the environment variable `REPO_DIR`
-2. `npm link` - If you always want the CLI available you will have to do something similar to what the `install.sh` script does. (might be able to use the npm package `pkg` to create an executable, though that might require having to change the tsconfig module to CommonJS).
+2. `npm link` ~ If you always want the CLI available you will have to do something similar to what the `install.sh` script does. (might be able to use the npm package `pkg` to create an executable, though that might require having to change the tsconfig module to CommonJS).
 
 ## Local Development
 
@@ -76,9 +77,10 @@ _This CLI Usage section assumes the CLI entrypoint is the default "mon" - swap w
 Since this is subject to evolve and change over time, refer to `mon --help`.  
 This also works out the box for new and existing commands.
 
-## Managing services
+## Services
 
-### Services
+Services are the heart of Montra. Services can be anything you want to run as a service. An express app, a React project, a postgres container, etc.  
+Services are at the core just a name, a filesystem path to the service and a start command.   
  
 `mon service list` will list services (`ls` alias).  
 `mon service add` will prompt the creation of a new service.  
@@ -94,10 +96,10 @@ This also works out the box for new and existing commands.
 `mon service export` used for sharing service configurations with someone else.  
 `mon service import "<export-output>"` import all services from someone else's configuration.  
 
-### Groups
+## Groups
 
 Services can be added to groups that can easily be shared with others with export/import capabilities.  
-Also helps with separating services from different projects.  
+Groups also helps with separating services from different projects and make it easy to start and stop multiple services.  
 
 `mon group list` will list all the groups.  
 `mon group create backend` will create a group with the name `backend`.  
@@ -109,7 +111,7 @@ Also helps with separating services from different projects.
 `mon group export` used for sharing group configurations with someone else.  
 `mon group import "<export-output>"` import all groups from someone else's configuration.  
 
-### Packages
+## Packages
 
 Packages are repositories that don't act as a deployable - e.g. a library.
 
