@@ -94,7 +94,7 @@ Services are at the core just a name, a filesystem path to the service and a sta
 `mon service update <service>` will update the service (git pull > nvm install > nvm use > npm install).  
 `mon service vulnerabilities <service>` will list image vulnerabilities from AWS Inspector for the latest image tag (requires valid AWS session - `aws configure sso`).  
 `mon service export` used for sharing service configurations with someone else.  
-`mon service import "<export-output>"` import all services from someone else's configuration.  
+`mon service import '<export-output>'` import all services from someone else's configuration.  
 
 ## Groups
 
@@ -109,7 +109,7 @@ Groups also helps with separating services from different projects and make it e
 `mon group stop backend` will stop all the services in the group with the name `backend`.  
 `mon group info backend` will list all the services in the group with the name `backend`.  
 `mon group export` used for sharing group configurations with someone else.  
-`mon group import "<export-output>"` import all groups from someone else's configuration.  
+`mon group import '<export-output>'` import all groups from someone else's configuration.  
 
 ## Packages
 
@@ -122,4 +122,4 @@ Packages are repositories that don't act as a deployable - e.g. a library.
 `mon package update <package>` will update the package (git pull > nvm install > nvm use > npm install).
 `mon package subscribe <package>` will notify when a new tag (version) is released for the given package (uses registry.npmjs.org to check dist tag)  
 `mon package export` used for sharing package configurations with someone else.  
-`mon package import "<export-output>"` import all packages from someone else's configuration.
+`mon package import '<export-output>'` import all packages from someone else's configuration.
