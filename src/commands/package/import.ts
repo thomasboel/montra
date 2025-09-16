@@ -4,36 +4,73 @@ import store, { Package } from '../../utils/store.js';
 import { withErrorHandler } from '../../utils/errorHandler.js';
 import { add } from './add.js';
 import { remove } from './remove.js';
+import inquirer from 'inquirer';
+
+type PackageImport = Package & { cliVersion: string };
 
 export async function _import(
   packagesImport: string,
   { force }: { force: boolean },
 ): Promise<void> {
-  const packages = store.get('packages') ?? [];
+  const packageImports: PackageImport[] = JSON.parse(packagesImport);
 
-  const packagesToAdd: Package[] = JSON.parse(packagesImport);
+  console.clear();
 
-  for (const packageToAdd of packagesToAdd) {
-    const packageAlreadyExists = packages.some(
-      (_package) => _package.name === packageToAdd.name,
+  const { choices }: { choices: string[] } = await inquirer.prompt([
+    {
+      type: 'checkbox',
+      name: 'choices',
+      message: 'Select the services you wish to import',
+      choices: packageImports.map((p) => 'name: ' + p.name),
+      pageSize: 40,
+      loop: false,
+    },
+  ]);
+
+  console.clear();
+
+  const packagesToImport = choices
+    .map((choice) =>
+      packageImports.find((_package) =>
+        choice.startsWith(`name: ${_package.name}`),
+      ),
+    )
+    .filter((_package) => _package !== undefined);
+
+  const existingPackages = store.get('packages') ?? [];
+
+  for (const packageToImport of packagesToImport) {
+    const packageAlreadyExists = existingPackages.some(
+      (_package) => _package.name === packageToImport.name,
     );
 
     if (packageAlreadyExists && !force) {
-      console.warn(
-        `ℹ️ Skipping import of package with the name "${packageToAdd.name}" since it already exists. Use --force to force an overwrite of the existing package.`,
-      );
-      continue;
+      const { confirmed } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'confirmed',
+          message: `A package with the name "${packageToImport.name}" already exists, do you wish to overwrite the existing package?`,
+        },
+      ]);
+
+      if (confirmed) {
+        await remove(packageToImport.name);
+      } else {
+        continue;
+      }
     }
 
     if (packageAlreadyExists && force) {
-      await remove(packageToAdd.name);
+      await remove(packageToImport.name);
     }
 
     await add({
-      name: packageToAdd.name,
-      repository: packageToAdd.repository,
+      name: packageToImport.name,
+      repository: packageToImport.repository,
     });
   }
+
+  console.log(`✅ Import done`);
 }
 
 export default new Command('import')
