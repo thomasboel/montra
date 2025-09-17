@@ -108,6 +108,7 @@ Groups also helps with separating services from different projects and make it e
 `mon group start backend` will start all the services in the group with the name `backend`.  
 `mon group stop backend` will stop all the services in the group with the name `backend`.  
 `mon group info backend` will list all the services in the group with the name `backend`.  
+`mon group modify backend` will allow changing the group name and services.  
 `mon group export` used for sharing group configurations with someone else.  
 `mon group import '<export-output>'` import all groups from someone else's configuration.  
 

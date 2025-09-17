@@ -8,20 +8,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # 1.0.1
 
 ## Runtime
+
 Moved runtime configuration to the service configuration rather than a global setting.  
-This allows running some services in docker and other services in tmux simultaneously. 
+This allows running some services in docker and other services in tmux simultaneously.
 
 ## Adding/Modifying service configuration
+
 New service command added to modify service configuration.  
-Usage: `mon service modify <service>`. Uses the `inquirer` package for a smooth UX.  
+Usage: `mon service modify <service>`. Uses the `inquirer` package for a smooth UX.
 
 The `mon service add` command was also updated, so now it uses `inquirer` instead of needing all configuration as command options & arguments.
 
+## Creating/Modifying service groups
+
+New group command added to modify a group.  
+Usage: `mon group modify <group>`. Uses the `inquirer` package for a smooth UX.
+
+The `mon group create` command was also updated to use `inquirer`, which allows for adding services when creating the group rather than after.
+
 ## Better imports
+
 All the import commands have been improved and now uses `inquirer` so the user has more control when importing someone else's configurations.  
-A `cliVersion: string` property was also added at the export stage, since future imports might need to take this into consideration. 
+A `cliVersion: string` property was also added at the export stage, since future imports might need to take this into consideration.
 
 ## Bug fixes
+
 - Fixed `mon service vulnerabilites <service>` command sometimes getting `dataRangeError [ERR_CHILD_PROCESS_STDIO_MAXBUFFER]: stdout maxBuffer length exceeded` by increasing maxBuffer for child_process.
 - Fixed internal call to `notify()` in `mon package subscribe <package>` command.
 - Fixed default behaviour for `mon service status <service>` command.
