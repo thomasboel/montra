@@ -2,10 +2,7 @@ import { Command } from '@commander-js/extra-typings';
 import * as tmux from '../../lib/tmux/tmux.js';
 
 const listSessions = new Command('listSessions')
-  .option(
-    '-j, --json',
-    'print sessions as stringified json to allow jq piping',
-  )
+  .option('-j, --json', 'print sessions as stringified json to allow jq piping')
   .action(async ({ json }) => {
     const result = await tmux.listSessions();
 
@@ -74,10 +71,7 @@ const newWindow = new Command('newWindow')
   });
 
 const listWindows = new Command('listWindows')
-  .option(
-    '-j, --json',
-    'print windows as stringified json to allow jq piping',
-  )
+  .option('-j, --json', 'print windows as stringified json to allow jq piping')
   .argument('<string>', 'session')
   .action(async (session, { json }) => {
     const result = await tmux.listWindows(session);

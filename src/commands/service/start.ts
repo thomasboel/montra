@@ -52,7 +52,9 @@ async function startService(serviceName: string): Promise<void> {
       await startDockerService(service);
       break;
     default:
-      throw new Error(`Unknown runtime "${service.runtime}" configured for service ${serviceName}`);
+      throw new Error(
+        `Unknown runtime "${service.runtime}" configured for service ${serviceName}`,
+      );
   }
 
   store.set('startedServices', [

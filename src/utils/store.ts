@@ -13,10 +13,7 @@ export const SERVICE_TYPES = [
 
 export type ServiceType = (typeof SERVICE_TYPES)[number];
 
-export const RUNTIMES = [
-  'tmux',
-  'docker'
-] as const;
+export const RUNTIMES = ['tmux', 'docker'] as const;
 
 export type Runtime = (typeof RUNTIMES)[number];
 

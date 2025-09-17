@@ -48,7 +48,9 @@ async function stopService(serviceName: string): Promise<void> {
     case 'docker':
       return await stopDockerService(service);
     default:
-      throw new Error(`Unknown runtime "${service.runtime}" configured for service ${serviceName}`);
+      throw new Error(
+        `Unknown runtime "${service.runtime}" configured for service ${serviceName}`,
+      );
   }
 }
 

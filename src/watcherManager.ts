@@ -23,10 +23,7 @@ export async function ensureWatcherRunning() {
   const result = await newSession({
     sessionName: WATCHER_SESSION,
     windowName: WATCHER_WINDOW,
-    entrypoint: path.resolve(
-      store.get('repositoryDirectory'),
-      'montra',
-    ),
+    entrypoint: path.resolve(store.get('repositoryDirectory'), 'montra'),
     command: `node dist/src/watcher.js`,
     keepOpen: false,
   });
