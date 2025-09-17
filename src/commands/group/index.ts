@@ -6,6 +6,7 @@ import list from './list.js';
 import info from './info.js';
 import add from './add.js';
 import remove from './remove.js';
+import modify from './modify.js';
 import _export from './export.js';
 import _import from './import.js';
 import start from './start.js';
@@ -19,6 +20,7 @@ export default new Command('group')
   .addCommand(info)
   .addCommand(add)
   .addCommand(remove)
+  .addCommand(modify)
   .addCommand(_export)
   .addCommand(_import)
   .addCommand(start)

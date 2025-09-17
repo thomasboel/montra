@@ -81,6 +81,8 @@ export async function modify(serviceName: string): Promise<void> {
   });
 
   store.set('services', updatedServices);
+
+  console.log(`✅ The ${serviceName} service was updated successfully`);
 }
 
 export default new Command('modify')
