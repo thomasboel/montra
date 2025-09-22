@@ -121,7 +121,7 @@ async function checkLivenessProbe(service: Service): Promise<boolean> {
 
   if (livenessProbeUrlFromDeploymentFileResult.success) {
     const result = await execute(
-      `curl --fail --silent --output /dev/null http://localhost:${service.port}${livenessProbeUrlFromDeploymentFileResult.stdout.trim()}`,
+      `curl --fail --silent --output /dev/null --max-time 10 http://localhost:${service.port}${livenessProbeUrlFromDeploymentFileResult.stdout.trim()}`,
     );
 
     if (result.success) {
