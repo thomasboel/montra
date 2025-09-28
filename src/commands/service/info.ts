@@ -3,20 +3,21 @@ import path from 'node:path';
 import chalk from 'chalk';
 
 import { execute } from '../../lib/exec.js';
-import { getServiceStatus, statusMap } from './status.js';
+import { getServiceStatus, ServiceStatus, statusMap } from './status.js';
 import { withErrorHandler } from '../../utils/errorHandler.js';
-import store, { Runtime } from '../../utils/store.js';
+import store, { Runtime, ServiceType } from '../../utils/store.js';
 import ora from 'ora';
 import { prettyPrintKeyValue } from '../../utils/prettyPrintKeyValue.js';
 
-type ServiceInfo = {
+export type ServiceInfo = {
   service: string;
   alias?: string;
-  type: string;
-  status?: string;
+  type: ServiceType;
+  status?: ServiceStatus;
   repository: string;
   branch: string;
   version: string;
+  description: string;
   nodeVersion: string;
   runCommand?: string;
   expectedSecondsToStart?: number;
@@ -43,7 +44,7 @@ export async function info(
   printServiceInfo(serviceInfo);
 }
 
-async function getServiceInfo({
+export async function getServiceInfo({
   serviceName,
   status,
 }: {
@@ -81,6 +82,15 @@ async function getServiceInfo({
     ? projectVersionResult.stdout.trim()
     : '⚠️ Could not determine the project version';
 
+  const projectDescriptionResult = await execute(
+    'cat package.json | jq -r .description',
+    { cwd: repoPath },
+  );
+
+  const projectDescription = projectDescriptionResult.success
+    ? projectDescriptionResult.stdout.trim()
+    : '⚠️ Could not determine the project description';
+
   const nodeVersionResult = await execute('cat .nvmrc', { cwd: repoPath });
 
   const nodeVersion = nodeVersionResult.success
@@ -91,10 +101,11 @@ async function getServiceInfo({
     service: service.name,
     alias: service.alias,
     type: service.type,
-    status: status ? statusMap[await getServiceStatus(serviceName)] : undefined,
+    status: status ? await getServiceStatus(serviceName) : undefined,
     repository: repoPath,
     branch: currentWorkingBranch,
     version: projectVersion,
+    description: projectDescription,
     nodeVersion,
     runCommand: service.runCommand,
     expectedSecondsToStart: service.expectedSecondsToStart,
@@ -107,7 +118,10 @@ function printServiceInfo(serviceInfo: ServiceInfo): void {
   prettyPrintKeyValue('📦 Service', serviceInfo.service);
   prettyPrintKeyValue('🔖 Alias', serviceInfo.alias);
   prettyPrintKeyValue('ℹ️ Type', serviceInfo.type);
-  prettyPrintKeyValue(`⚙️ Status`, serviceInfo.status);
+  prettyPrintKeyValue(
+    `⚙️ Status`,
+    serviceInfo.status && statusMap[serviceInfo.status],
+  );
   prettyPrintKeyValue('📁 Repository', chalk.dim(serviceInfo.repository));
   prettyPrintKeyValue('🌿 Branch', chalk.green(serviceInfo.branch));
   prettyPrintKeyValue('🧾 Version', chalk.magenta(serviceInfo.version));

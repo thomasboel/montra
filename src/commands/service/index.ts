@@ -11,6 +11,7 @@ import update from './update.js';
 import info from './info.js';
 import vulnerabilities from './vulnerabilities.js';
 import modify from './modify.js';
+import overview from './overview.js';
 import _export from './export.js';
 import _import from './import.js';
 
@@ -27,5 +28,6 @@ export default new Command('service')
   .addCommand(info)
   .addCommand(vulnerabilities)
   .addCommand(modify)
+  .addCommand(overview)
   .addCommand(_export)
   .addCommand(_import);
