@@ -14,7 +14,7 @@ import {
   prettyPrintKeyValue,
 } from '../../utils/prettyPrintKeyValue.js';
 
-type ServiceStatus = 'RUNNING' | 'STOPPED' | 'SESSION_EXISTS';
+export type ServiceStatus = 'RUNNING' | 'STOPPED' | 'SESSION_EXISTS';
 
 export const statusMap: Record<ServiceStatus, string> = {
   RUNNING: '🟢 Running',
