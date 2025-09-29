@@ -1,11 +1,12 @@
 import { Command } from '@commander-js/extra-typings';
 
-import store, { Service, ServiceType } from '../../utils/store.js';
+import store, { ServiceType } from '../../utils/store.js';
 import { withErrorHandler } from '../../utils/errorHandler.js';
 import { ChalkColor, printBoxes } from '../../lib/box.js';
 import { ServiceStatus } from './status.js';
 import { chunkArray } from '../../utils/prettyPrintKeyValue.js';
 import { getServiceInfo, ServiceInfo } from './info.js';
+import ora from 'ora';
 
 const serviceStatusColorMap: Record<ServiceStatus, ChalkColor> = {
   RUNNING: 'green',
@@ -20,7 +21,17 @@ const serviceTypeIconMap: Record<ServiceType, string> = {
   lambda: 'λ',
 };
 
-export async function overview(): Promise<void> {
+export async function overview() {
+  console.clear();
+  await _overview();
+  setInterval(async () => {
+    await _overview();
+  }, 30000);
+}
+
+export async function _overview(): Promise<void> {
+  const spinner = ora('Fetching service info...').start();
+
   const services = store.get('services') ?? [];
 
   const serviceInfos = await Promise.all(
@@ -47,6 +58,9 @@ export async function overview(): Promise<void> {
     },
     {} as Record<ServiceType, ServiceInfo[]>,
   );
+
+  spinner.clear();
+  console.clear();
 
   for (const [type, services] of Object.entries(groupedServices)) {
     console.log(``);
