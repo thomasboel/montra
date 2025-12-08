@@ -95,7 +95,7 @@ interface VulnerabilityInfo {
 
 export async function vulnerabilities(
   serviceName: string,
-  { json }: { json: boolean },
+  { json, filter }: { json: boolean; filter: string },
 ): Promise<void> {
   const service = store
     .get('services')
@@ -137,13 +137,37 @@ export async function vulnerabilities(
       getVulnerabilityInfo(finding),
     );
 
+  const filteredVulnerabilityInfos = filter?.length
+    ? getFilteredVulnerabilityInfos(vulnerabilityInfos, filter)
+    : vulnerabilityInfos;
+
   if (json) {
-    console.log(JSON.stringify(vulnerabilityInfos, null, 2));
+    console.log(JSON.stringify(filteredVulnerabilityInfos, null, 2));
     return;
   }
 
-  for (const vulnerabilityInfo of vulnerabilityInfos) {
+  for (const vulnerabilityInfo of filteredVulnerabilityInfos) {
     printVulnerabilityFinding(vulnerabilityInfo);
+  }
+}
+
+function getFilteredVulnerabilityInfos(
+  infos: VulnerabilityInfo[],
+  filterString: string,
+): VulnerabilityInfo[] {
+  try {
+    const filterStrings = JSON.parse(filterString);
+
+    if (!Array.isArray(filterStrings)) {
+      console.log('Invalid filter string passed, must be an array');
+      return infos;
+    }
+
+    return infos.filter((info) =>
+      (filterStrings as string[]).some((filter) => info.title.includes(filter)),
+    );
+  } catch (error) {
+    return infos;
   }
 }
 
@@ -212,5 +236,9 @@ export default new Command('vulnerabilities')
   .option(
     '-j, --json',
     'print vulnerabilities as stringified json to allow jq piping',
+  )
+  .option(
+    '-f, --filter [value]',
+    'filter to only include packages where strings in the provided array is a substring of a package name. E.g. "libcap" is a substring of "go/stdlib, libcap"',
   )
   .action(withErrorHandler(vulnerabilities));
