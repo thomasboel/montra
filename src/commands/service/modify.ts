@@ -73,6 +73,10 @@ export async function modify(serviceName: string): Promise<void> {
     },
   ]);
 
+  if (updatedService.alias === '') {
+    delete updatedService.alias;
+  }
+
   const updatedServices = store.get('services').map((service) => {
     if (service.name === serviceName) {
       return updatedService;
