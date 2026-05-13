@@ -1,0 +1,127 @@
+Index: bin/index.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>#!/usr/bin/env node\n\nimport { program } from '@commander-js/extra-typings';\n\nimport config from '../src/commands/config.js';\nimport service from '../src/commands/service/index.js';\nimport group from '../src/commands/group/index.js';\nimport _package from '../src/commands/package/index.js';\nimport tmuxTest from '../src/commands/internal/tmuxTest.js';\nimport dockerTest from '../src/commands/internal/dockerTest.js';\n\nimport { version } from '../src/utils/pkgVersion.js';\nimport { ensureWatcherRunning } from '../src/watcherManager.js';\n\nprogram\n  .name('montra')\n  .version(version)\n  .description('interact with your local development environment')\n  .addCommand(config)\n  .addCommand(service)\n  .addCommand(group)\n  .addCommand(_package)\n  .addCommand(tmuxTest) // For testing the tmux library\n  .addCommand(dockerTest); // For testing the docker library\n\nprogram.hook('preAction', async () => {\n  await ensureWatcherRunning();\n});\n\nprogram.parse(process.argv);\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/bin/index.ts b/bin/index.ts
+--- a/bin/index.ts	(revision 2578f833c3d6323466b05748e65290578ec25022)
++++ b/bin/index.ts	(date 1748103872795)
+@@ -1,6 +1,6 @@
+ #!/usr/bin/env node
+ 
+-import { program } from '@commander-js/extra-typings';
++import { Command, program } from '@commander-js/extra-typings';
+ 
+ import config from '../src/commands/config.js';
+ import service from '../src/commands/service/index.js';
+@@ -11,11 +11,25 @@
+ 
+ import { version } from '../src/utils/pkgVersion.js';
+ import { ensureWatcherRunning } from '../src/watcherManager.js';
++import { extractCommandStructure } from '../src/utils/extractCommandStructure.js';
++import { generateMarkdownFromCommandStructure } from '../src/utils/generateMarkdownFromCommandStructure.js';
+ 
+ program
+   .name('montra')
+   .version(version)
+   .description('interact with your local development environment')
++  .addCommand(new Command('dump').action(() => {
++    const cliStructure = extractCommandStructure(program);
++
++    console.log(JSON.stringify(cliStructure, null, 2));
++  }))
++  .addCommand(new Command('markdown-dump').action(() => {
++    const cliStructure = extractCommandStructure(program);
++
++    const markdown = generateMarkdownFromCommandStructure(cliStructure);
++
++    console.log(markdown);
++  }))
+   .addCommand(config)
+   .addCommand(service)
+   .addCommand(group)
+Index: src/utils/generateMarkdownFromCommandStructure.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/utils/generateMarkdownFromCommandStructure.ts b/src/utils/generateMarkdownFromCommandStructure.ts
+new file mode 100644
+--- /dev/null	(date 1748103872797)
++++ b/src/utils/generateMarkdownFromCommandStructure.ts	(date 1748103872797)
+@@ -0,0 +1,50 @@
++import { Argument, Option } from '@commander-js/extra-typings';
++
++interface CommandStructure {
++  name: string;
++  description: string;
++  arguments: Argument[];
++  options: Option[];
++  subcommands: CommandStructure[];
++}
++
++export function generateMarkdownFromCommandStructure(
++  command: CommandStructure,
++  level = 1,
++): string {
++  const indent = '#'.repeat(level);
++  let markdown = `${indent} ${command.name}\n\n`;
++
++  if (command.description) {
++    markdown += `${command.description}\n\n`;
++  }
++
++  if (command.arguments.length > 0) {
++    markdown += `### Arguments\n\n`;
++    command.arguments.forEach((arg, index) => {
++      markdown += `- **Argument ${index + 1}**: ${
++        arg.required ? 'Required' : 'Optional'
++      }${arg.variadic ? ', Variadic' : ''}\n`;
++    });
++    markdown += `\n`;
++  }
++
++  if (command.options.length > 0) {
++    markdown += `### Options\n\n`;
++    command.options.forEach((option) => {
++      markdown += `- **${option.flags}**: ${option.description} ${
++        option.required ? '(Required)' : ''
++      }\n`;
++    });
++    markdown += `\n`;
++  }
++
++  if (command.subcommands.length > 0) {
++    markdown += `### Subcommands\n\n`;
++    command.subcommands.forEach((subcommand) => {
++      markdown += generateMarkdownFromCommandStructure(subcommand, level + 1);
++    });
++  }
++
++  return markdown;
++}
+Index: src/utils/extractCommandStructure.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/utils/extractCommandStructure.ts b/src/utils/extractCommandStructure.ts
+new file mode 100644
+--- /dev/null	(date 1748103755586)
++++ b/src/utils/extractCommandStructure.ts	(date 1748103755586)
+@@ -0,0 +1,13 @@
++import { CommandUnknownOpts } from '@commander-js/extra-typings';
++
++export function extractCommandStructure(command: CommandUnknownOpts): any {
++  return {
++    name: command.name(),
++    description: command.description(),
++    arguments: command.registeredArguments,
++    options: command.options,
++    subcommands: command.commands.map((subcommand) =>
++      extractCommandStructure(subcommand),
++    ),
++  };
++}

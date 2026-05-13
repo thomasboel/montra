@@ -1,0 +1,74 @@
+#compdef mon
+
+_mycli() {
+  local context state state_descr line
+  typeset -A opt_args
+
+  local -a words
+  local cword
+  words=("${words[@]}")
+  cword=$CURRENT
+
+  # Fetch the full CLI structure as JSON
+  local json
+  json=$(mon _autocomplete)
+
+  # Extract the path of subcommands based on user input
+  local -a path_subcommands
+  path_subcommands=("${(@)words[2,$((CURRENT - 1))]}")
+
+  # Debug log for development
+  mkdir -p /tmp
+  echo "DEBUG: WORDS=(${words[@]})" >> /tmp/mon-autocomplete.log
+  echo "DEBUG: CURRENT=$CURRENT" >> /tmp/mon-autocomplete.log
+  echo "DEBUG: PATH_SUBCOMMANDS=(${path_subcommands[@]})" >> /tmp/mon-autocomplete.log
+
+  local level_data="$json"
+  local current_data=""
+
+  # Traverse into nested subcommands
+  for subcmd in $path_subcommands; do
+    current_data=$(jq -c --arg name "$subcmd" '.[] | select(.name == $name)' <<< "$level_data")
+    echo "DEBUG: CURRENT_SUBCMD=$subcmd" >> /tmp/mon-autocomplete.log
+    echo "DEBUG: MATCHED_JSON=$current_data" >> /tmp/mon-autocomplete.log
+    if [[ -z "$current_data" || "$current_data" == "null" ]]; then
+      level_data=""
+      break
+    fi
+    level_data=$(jq -c '.subcommands // []' <<< "$current_data")
+    echo "DEBUG: NEXT_LEVEL=$level_data" >> /tmp/mon-autocomplete.log
+  done
+
+  # If we have further subcommands at this level
+  if [[ -n "$level_data" && "$level_data" != "null" && "$words[$CURRENT]" != -* ]]; then
+    local -a next_subcommands
+    next_subcommands=(${(f)"$(jq -r '.[].name' <<< "$level_data")"})
+    if [[ -n "$next_subcommands" ]]; then
+      _describe 'subcommands' next_subcommands
+      return
+    fi
+  fi
+
+  # If we're inside a subcommand, show its options and arguments
+  if [[ -n "$current_data" && "$current_data" != "null" ]]; then
+    local -a opts args
+
+    # Parse options (flags)
+    opts=(${(f)"$(jq -r '.options[]? | .flags + ":" + (.description // "")' <<< "$current_data")"})
+
+    # Parse positional arguments
+    args=(${(f)"$(jq -r '
+      .arguments[]?
+      | (if .required then "<" else "[" end)
+        + .name
+        + (if .variadic then "..." else "" end)
+        + (if .required then ">" else "]" end)
+    ' <<< "$current_data")"})
+
+    _arguments -s \
+      "${opts[@]}" \
+      "${args[@]}"
+  fi
+}
+
+_mycli "$@"

@@ -41,7 +41,12 @@ export default new Command('_autocomplete')
   .description('internal command for autocomplete')
   .action(() => {
     const data = program.commands
-      .filter((c) => !['_autocomplete', 'docker', 'tmux'].includes(c.name()))
+      .filter(
+        (c) =>
+          !['_autocomplete', '_overview-click', 'docker', 'tmux'].includes(
+            c.name(),
+          ),
+      )
       .map(getCommandData);
 
     console.log(JSON.stringify(data, null, 2));

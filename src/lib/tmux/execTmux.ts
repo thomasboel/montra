@@ -61,6 +61,72 @@ const tmuxCommandTree = {
     options: ['-t'],
     args: ['value'],
   },
+  'display-menu': {
+    alias: 'menu',
+    flags: ['-M', '-O'],
+    options: ['-c', '-C', '-S', '-T', '-t', '-x', '-y'],
+    args: ['name', 'key', 'command'],
+  },
+  'display-popup': {
+    alias: 'popup',
+    flags: ['-B', '-C', '-E', '-K'],
+    options: ['-b', '-d', '-e', '-h', '-s', '-S', '-t', '-w', '-x', '-y'],
+    args: ['shell-command'],
+  },
+  'display-message': {
+    alias: 'display',
+    flags: ['-a', '-I', '-l', '-N', '-p', '-v'],
+    options: ['-c', '-d', '-t', '-F'],
+    args: ['message'],
+  },
+  'bind-key': {
+    alias: 'bind',
+    flags: ['-n', '-r'],
+    options: ['-N', '-T'],
+    args: ['key', 'command'],
+  },
+  'unbind-key': {
+    alias: 'unbind',
+    flags: ['-a', '-q'],
+    options: ['-T'],
+    args: ['key'],
+  },
+  'list-keys': {
+    alias: 'lsk',
+    flags: ['-1', '-a', '-N', '-P'],
+    options: ['-T'],
+    args: ['key'],
+  },
+  'source-file': {
+    alias: 'source',
+    flags: ['-F', '-n', '-q', '-v'],
+    options: [],
+    args: ['path'],
+  },
+  'run-shell': {
+    alias: 'run',
+    flags: ['-b', '-C'],
+    options: ['-d', '-t'],
+    args: ['shell-command'],
+  },
+  'set-hook': {
+    alias: 'set-hook',
+    flags: ['-a', '-g', '-p', '-R', '-u'],
+    options: ['-t'],
+    args: ['hook-name', 'command'],
+  },
+  'set-option': {
+    alias: 'set',
+    flags: ['-a', '-F', '-g', '-o', '-p', '-q', '-s', '-u', '-U'],
+    options: ['-t'],
+    args: ['option', 'value'],
+  },
+  'show-options': {
+    alias: 'show',
+    flags: ['-A', '-g', '-H', '-p', '-q', '-s', '-v', '-w'],
+    options: ['-t'],
+    args: ['option'],
+  },
 } as const;
 
 type TmuxCommand = keyof typeof tmuxCommandTree;

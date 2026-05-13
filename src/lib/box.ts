@@ -302,6 +302,9 @@ export function printBox(options: BoxOptions): void {
   console.log(createBox(options));
 }
 
+export { createBox };
+export type { BoxOptions };
+
 /**
  * @interface PrintBoxesOptions
  * Defines the settings for printing multiple boxes side-by-side.

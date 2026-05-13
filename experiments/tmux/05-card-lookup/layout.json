@@ -1,0 +1,11 @@
+{
+  "pane_width": 80,
+  "pane_height": 16,
+  "cards": [
+    { "name": "api",      "x": 0,  "y": 0,  "w": 25, "h": 4 },
+    { "name": "worker",   "x": 26, "y": 0,  "w": 25, "h": 4 },
+    { "name": "frontend", "x": 52, "y": 0,  "w": 25, "h": 4 },
+    { "name": "postgres", "x": 0,  "y": 5,  "w": 25, "h": 4 },
+    { "name": "redis",    "x": 26, "y": 5,  "w": 25, "h": 4 }
+  ]
+}
