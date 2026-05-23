@@ -1,7 +1,6 @@
 import { Command } from '@commander-js/extra-typings';
-import ora from 'ora';
 
-import store, { ServiceType } from '../../utils/store.js';
+import store, { Runtime, Service, ServiceType } from '../../utils/store.js';
 import { withErrorHandler } from '../../utils/errorHandler.js';
 import {
   BoxOptions,
@@ -46,7 +45,18 @@ const serviceTypeIconMap: Record<ServiceType, string> = {
   lambda: 'λ',
 };
 
+type CardState = {
+  name: string;
+  alias?: string;
+  type: ServiceType;
+  runtime: Runtime;
+  info?: ServiceInfo;
+  status?: ServiceStatus;
+};
+
 type Teardown = () => Promise<void>;
+
+let activeRefresh: { cancelled: boolean } | null = null;
 
 export async function overview(opts: { refreshInterval?: string }) {
   const refreshSeconds =
@@ -54,11 +64,8 @@ export async function overview(opts: { refreshInterval?: string }) {
   const refreshMs = refreshSeconds * 1000;
 
   const paneId = process.env.TMUX_PANE ?? null;
-  const interactive = paneId !== null;
-
-  let teardown: Teardown = async () => {};
-  if (interactive) {
-    teardown = await setupClickIntegration(paneId);
+  if (paneId !== null) {
+    const teardown = await setupClickIntegration(paneId);
     registerExitHandlers(teardown);
   }
 
@@ -72,45 +79,97 @@ export async function overview(opts: { refreshInterval?: string }) {
 }
 
 async function refresh(paneId: string | null): Promise<void> {
-  const spinner = ora('Fetching service info...').start();
+  if (activeRefresh) activeRefresh.cancelled = true;
+  const me = { cancelled: false };
+  activeRefresh = me;
 
   const services = store.get('services') ?? [];
-  const [serviceInfos, statusByName] = await Promise.all([
-    Promise.all(
-      services.map((service) =>
-        getServiceInfo({ serviceName: service.name, status: false }),
-      ),
-    ),
-    getServiceStatusBulk(services.map((service) => service.name)),
-  ]);
-
-  for (const info of serviceInfos) {
-    info.status = statusByName.get(info.service);
+  if (services.length === 0) {
+    console.clear();
+    return;
   }
 
-  const sorted = serviceInfos.sort((a, b) =>
-    a.service.localeCompare(b.service),
-  );
-  const grouped = sorted.reduce(
-    (groups, service) => {
-      groups[service.type] = [...(groups[service.type] ?? []), service];
-      return groups;
-    },
-    {} as Record<ServiceType, ServiceInfo[]>,
+  const cards = initialCardStates(services);
+  await paintIfActive(cards, paneId, me);
+
+  const infoFetch = fetchAllInfo(services, cards).then(() =>
+    paintIfActive(cards, paneId, me),
   );
 
-  spinner.clear();
+  const statusFetch = getServiceStatusBulk(services.map((s) => s.name))
+    .then((statuses) => {
+      for (const [name, status] of statuses) {
+        const card = cards.get(name);
+        if (card) card.status = status;
+      }
+    })
+    .then(() => paintIfActive(cards, paneId, me));
+
+  await Promise.all([infoFetch, statusFetch]);
+}
+
+function initialCardStates(services: Service[]): Map<string, CardState> {
+  const map = new Map<string, CardState>();
+  for (const s of services) {
+    map.set(s.name, {
+      name: s.name,
+      alias: s.alias,
+      type: s.type,
+      runtime: s.runtime,
+    });
+  }
+  return map;
+}
+
+async function fetchAllInfo(
+  services: Service[],
+  cards: Map<string, CardState>,
+): Promise<void> {
+  await Promise.all(
+    services.map(async (service) => {
+      try {
+        const info = await getServiceInfo({
+          serviceName: service.name,
+          status: false,
+        });
+        const card = cards.get(service.name);
+        if (card) card.info = info;
+      } catch {
+        /* leave card without info — placeholder stays visible */
+      }
+    }),
+  );
+}
+
+async function paintIfActive(
+  cards: Map<string, CardState>,
+  paneId: string | null,
+  refresh: { cancelled: boolean },
+): Promise<void> {
+  if (refresh.cancelled) return;
+  await paint(cards, paneId);
+}
+
+async function paint(
+  cards: Map<string, CardState>,
+  paneId: string | null,
+): Promise<void> {
+  const sorted = [...cards.values()].sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
+  const grouped = groupByType(sorted);
+
   console.clear();
 
   if (paneId === null) {
-    for (const services of Object.values(grouped)) {
+    for (const groupCards of Object.values(grouped)) {
       console.log('');
-      renderGroupSimple(services);
+      renderGroupSimple(groupCards);
     }
     return;
   }
 
-  const { output, cards } = renderOverview(grouped);
+  const { output, cards: regions } = renderOverview(grouped);
   console.log(output);
 
   const size = await getPaneSize(paneId);
@@ -119,48 +178,67 @@ async function refresh(paneId: string | null): Promise<void> {
       paneId,
       paneWidth: size.width,
       paneHeight: size.height,
-      cards,
+      cards: regions,
     });
   }
 }
 
-function serviceToBoxOptions(service: ServiceInfo): BoxOptions {
+function groupByType(
+  cards: CardState[],
+): Record<ServiceType, CardState[]> {
+  return cards.reduce(
+    (groups, card) => {
+      groups[card.type] = [...(groups[card.type] ?? []), card];
+      return groups;
+    },
+    {} as Record<ServiceType, CardState[]>,
+  );
+}
+
+function cardToBoxOptions(card: CardState): BoxOptions {
+  const description = card.info?.description ?? '⏳ Fetching info…';
+  const version = card.info?.version ?? '…';
+  const branch = card.info?.branch ?? '…';
+
   return {
-    title: `${serviceTypeIconMap[service.type]} ${service.service}`,
+    title: `${serviceTypeIconMap[card.type]} ${card.name}`,
     titlePosition: 'topLeft',
-    text: `${service.description}\nruntime: ${service.runtime}\nversion: ${service.version}\nbranch: ${service.branch}`,
-    borderColor: service.status
-      ? serviceStatusColorMap[service.status]
-      : 'white',
+    text: `${description}\nruntime: ${card.runtime}\nversion: ${version}\nbranch: ${branch}`,
+    borderColor: borderColorForCard(card),
     textColor: 'white',
     width: BOX_WIDTH,
   };
 }
 
-function renderGroupSimple(services: ServiceInfo[]) {
-  const boxes = services.map(serviceToBoxOptions);
+function borderColorForCard(card: CardState): ChalkColor {
+  if (!card.status) return 'gray';
+  return serviceStatusColorMap[card.status];
+}
+
+function renderGroupSimple(cards: CardState[]) {
+  const boxes = cards.map(cardToBoxOptions);
   for (const chunk of chunkArray(boxes, BOXES_PER_ROW)) {
     printBoxes({ distanceBetween: BOX_DISTANCE, boxes: chunk });
   }
 }
 
-function renderOverview(grouped: Record<string, ServiceInfo[]>): {
+function renderOverview(grouped: Record<string, CardState[]>): {
   output: string;
   cards: CardRegion[];
 } {
   const lines: string[] = [];
-  const cards: CardRegion[] = [];
+  const regions: CardRegion[] = [];
 
-  for (const services of Object.values(grouped)) {
+  for (const groupCards of Object.values(grouped)) {
     lines.push('');
 
-    const boxes = services.map(serviceToBoxOptions);
+    const boxes = groupCards.map(cardToBoxOptions);
     const chunkedBoxes = chunkArray(boxes, BOXES_PER_ROW);
-    const chunkedServices = chunkArray(services, BOXES_PER_ROW);
+    const chunkedCards = chunkArray(groupCards, BOXES_PER_ROW);
 
     for (let chunkIdx = 0; chunkIdx < chunkedBoxes.length; chunkIdx++) {
       const chunkBoxes = chunkedBoxes[chunkIdx];
-      const chunkServices = chunkedServices[chunkIdx];
+      const chunkCards = chunkedCards[chunkIdx];
 
       const renderedBoxes = chunkBoxes.map((opts) =>
         createBox(opts).split('\n'),
@@ -168,9 +246,9 @@ function renderOverview(grouped: Record<string, ServiceInfo[]>): {
       const maxHeight = Math.max(...renderedBoxes.map((l) => l.length));
       const chunkY = lines.length;
 
-      chunkServices.forEach((service, i) => {
-        cards.push({
-          name: service.service,
+      chunkCards.forEach((card, i) => {
+        regions.push({
+          name: card.name,
           x: i * (BOX_WIDTH + BOX_DISTANCE),
           y: chunkY,
           w: BOX_WIDTH,
@@ -192,7 +270,7 @@ function renderOverview(grouped: Record<string, ServiceInfo[]>): {
     }
   }
 
-  return { output: lines.join('\n'), cards };
+  return { output: lines.join('\n'), cards: regions };
 }
 
 async function setupClickIntegration(paneId: string): Promise<Teardown> {
@@ -226,10 +304,6 @@ async function setupClickIntegration(paneId: string): Promise<Teardown> {
   };
 }
 
-/**
- * Ensures `mouse on` is set globally. Returns a function to restore the
- * prior value if we changed it; or `null` if it was already on.
- */
 async function ensureMouseOn(): Promise<Teardown | null> {
   const showResult = await execTmux(
     buildTmuxCommand('show-options', {}, ['-g', '-v'], ['mouse']),
@@ -254,10 +328,6 @@ async function ensureMouseOn(): Promise<Teardown | null> {
   };
 }
 
-/**
- * Backstop: if overview dies ungracefully, this hook restores the binding
- * and removes the layout file when the pane is closed.
- */
 async function installPaneDiedHook(
   paneId: string,
   capturedLine: string | null,
