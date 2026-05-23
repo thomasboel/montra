@@ -63,29 +63,38 @@ type SessionCaches = {
 async function buildSessionCaches(
   services: Service[],
 ): Promise<SessionCaches> {
-  const runtime = store.get('runtime');
   const portless = services.filter((s) => !s.port);
 
-  const tmuxWindowsByType = new Map<ServiceType, string[]>();
-  let dockerContainers: string[] = [];
-
-  if (portless.length === 0) {
-    return { tmuxWindowsByType, dockerContainers };
-  }
-
-  if (runtime === 'tmux') {
-    const uniqueTypes = [...new Set(portless.map((s) => s.type))];
-    await Promise.all(
-      uniqueTypes.map(async (type) => {
-        const result = await listWindows(type);
-        tmuxWindowsByType.set(type, result.success ? result.data : []);
-      }),
-    );
-  } else if (runtime === 'docker') {
-    dockerContainers = await getActiveContainers().catch(() => []);
-  }
+  const [tmuxWindowsByType, dockerContainers] = await Promise.all([
+    fetchTmuxWindowsByType(portless),
+    fetchDockerContainers(portless),
+  ]);
 
   return { tmuxWindowsByType, dockerContainers };
+}
+
+async function fetchTmuxWindowsByType(
+  services: Service[],
+): Promise<Map<ServiceType, string[]>> {
+  const tmuxTypes = new Set(
+    services.filter((s) => s.runtime === 'tmux').map((s) => s.type),
+  );
+  const windowsByType = new Map<ServiceType, string[]>();
+
+  await Promise.all(
+    [...tmuxTypes].map(async (type) => {
+      const result = await listWindows(type);
+      windowsByType.set(type, result.success ? result.data : []);
+    }),
+  );
+
+  return windowsByType;
+}
+
+async function fetchDockerContainers(services: Service[]): Promise<string[]> {
+  const needsDocker = services.some((s) => s.runtime === 'docker');
+  if (!needsDocker) return [];
+  return getActiveContainers().catch(() => []);
 }
 
 async function resolveStatus(
@@ -112,9 +121,7 @@ function sessionExistsForService(
   service: Service,
   caches: SessionCaches,
 ): boolean {
-  const runtime = store.get('runtime');
-
-  switch (runtime) {
+  switch (service.runtime) {
     case 'tmux': {
       const windows = caches.tmuxWindowsByType.get(service.type) ?? [];
       return windows.includes(service.name);
@@ -122,7 +129,9 @@ function sessionExistsForService(
     case 'docker':
       return caches.dockerContainers.some((c) => c.includes(service.name));
     default:
-      throw new Error(`Invalid runtime "${runtime}" specified in config`);
+      throw new Error(
+        `Invalid runtime "${service.runtime}" on service ${service.name}`,
+      );
   }
 }
 
