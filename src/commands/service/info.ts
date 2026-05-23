@@ -1,8 +1,8 @@
 import { Command } from '@commander-js/extra-typings';
 import path from 'node:path';
+import { promises as fs } from 'node:fs';
 import chalk from 'chalk';
 
-import { execute } from '../../lib/exec.js';
 import { getServiceStatus, ServiceStatus, statusMap } from './status.js';
 import { withErrorHandler } from '../../utils/errorHandler.js';
 import store, { Runtime, ServiceType } from '../../utils/store.js';
@@ -64,38 +64,21 @@ export async function getServiceInfo({
     service.repository,
   );
 
-  const currentWorkingBranchResult = await execute(
-    'git rev-parse --abbrev-ref HEAD',
-    { cwd: repoPath },
-  );
+  const [currentWorkingBranch, packageJson, nodeVersion] = await Promise.all([
+    readGitBranch(repoPath),
+    readPackageJson(repoPath),
+    readNvmrc(repoPath),
+  ]);
 
-  const currentWorkingBranch = currentWorkingBranchResult.success
-    ? currentWorkingBranchResult.stdout.trim()
-    : '⚠️ Could not determine the current working branch';
+  const projectVersion =
+    packageJson === null
+      ? '⚠️ Could not determine the project version'
+      : jqRawString(packageJson.version);
 
-  const projectVersionResult = await execute(
-    'cat package.json | jq -r .version',
-    { cwd: repoPath },
-  );
-
-  const projectVersion = projectVersionResult.success
-    ? projectVersionResult.stdout.trim()
-    : '⚠️ Could not determine the project version';
-
-  const projectDescriptionResult = await execute(
-    'cat package.json | jq -r .description',
-    { cwd: repoPath },
-  );
-
-  const projectDescription = projectDescriptionResult.success
-    ? projectDescriptionResult.stdout.trim()
-    : '⚠️ Could not determine the project description';
-
-  const nodeVersionResult = await execute('cat .nvmrc', { cwd: repoPath });
-
-  const nodeVersion = nodeVersionResult.success
-    ? nodeVersionResult.stdout.trim()
-    : '⚠️ Could not determine the node version';
+  const projectDescription =
+    packageJson === null
+      ? '⚠️ Could not determine the project description'
+      : jqRawString(packageJson.description);
 
   return {
     service: service.name,
@@ -112,6 +95,53 @@ export async function getServiceInfo({
     port: service.port,
     runtime: service.runtime,
   };
+}
+
+async function readGitBranch(repoPath: string): Promise<string> {
+  try {
+    let gitDir = path.join(repoPath, '.git');
+    const stat = await fs.stat(gitDir);
+
+    // Worktrees and submodules use a `.git` file pointing at the real gitdir.
+    if (stat.isFile()) {
+      const pointer = await fs.readFile(gitDir, 'utf8');
+      const match = pointer.match(/^gitdir:\s*(.+)$/m);
+      if (!match) throw new Error('Malformed .git file');
+      gitDir = path.resolve(repoPath, match[1].trim());
+    }
+
+    const head = (await fs.readFile(path.join(gitDir, 'HEAD'), 'utf8')).trim();
+    const branchMatch = head.match(/^ref: refs\/heads\/(.+)$/);
+    return branchMatch ? branchMatch[1] : 'HEAD';
+  } catch {
+    return '⚠️ Could not determine the current working branch';
+  }
+}
+
+async function readPackageJson(
+  repoPath: string,
+): Promise<Record<string, unknown> | null> {
+  try {
+    const raw = await fs.readFile(path.join(repoPath, 'package.json'), 'utf8');
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+async function readNvmrc(repoPath: string): Promise<string> {
+  try {
+    const raw = await fs.readFile(path.join(repoPath, '.nvmrc'), 'utf8');
+    return raw.trim();
+  } catch {
+    return '⚠️ Could not determine the node version';
+  }
+}
+
+// Mirrors `jq -r`: null/undefined become the string "null", everything else is stringified.
+function jqRawString(value: unknown): string {
+  if (value === null || value === undefined) return 'null';
+  return String(value);
 }
 
 function printServiceInfo(serviceInfo: ServiceInfo): void {
