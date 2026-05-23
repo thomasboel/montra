@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { execute } from '../../lib/exec.js';
 import { listWindows } from '../../lib/tmux/tmux.js';
-import store, { Service } from '../../utils/store.js';
+import store, { Service, ServiceType } from '../../utils/store.js';
 import { withErrorHandler } from '../../utils/errorHandler.js';
 import { getActiveContainers } from '../../lib/docker/docker.js';
 import {
@@ -55,14 +55,81 @@ export async function status(
 export async function getServiceStatus(
   serviceName: string,
 ): Promise<ServiceStatus> {
-  const service = store
-    .get('services')
-    .find((s) => [s.name, s.alias].includes(serviceName));
-
-  if (!service) {
+  const map = await getServiceStatusBulk([serviceName]);
+  const status = map.get(serviceName);
+  if (status === undefined) {
     throw new Error(`Service with the name ${serviceName} does not exist`);
   }
+  return status;
+}
 
+/**
+ * Resolves status for many services at once. Pre-fetches the runtime-level
+ * data (tmux windows per unique service type, docker container list) so
+ * each service doesn't re-query — collapses N tmux/docker calls down to
+ * one per unique type / one total.
+ */
+export async function getServiceStatusBulk(
+  serviceNames: string[],
+): Promise<Map<string, ServiceStatus>> {
+  const allServices = store.get('services');
+  const services = serviceNames.map((name) => {
+    const found = allServices.find((s) => [s.name, s.alias].includes(name));
+    if (!found) {
+      throw new Error(`Service with the name ${name} does not exist`);
+    }
+    return { input: name, service: found };
+  });
+
+  const caches = await buildSessionCaches(services.map((s) => s.service));
+
+  const entries = await Promise.all(
+    services.map(async ({ input, service }) => {
+      const status = await resolveStatus(service, caches);
+      return [input, status] as const;
+    }),
+  );
+
+  return new Map(entries);
+}
+
+type SessionCaches = {
+  tmuxWindowsByType: Map<ServiceType, string[]>;
+  dockerContainers: string[];
+};
+
+async function buildSessionCaches(
+  services: Service[],
+): Promise<SessionCaches> {
+  const runtime = store.get('runtime');
+  const portless = services.filter((s) => !s.port);
+
+  const tmuxWindowsByType = new Map<ServiceType, string[]>();
+  let dockerContainers: string[] = [];
+
+  if (portless.length === 0) {
+    return { tmuxWindowsByType, dockerContainers };
+  }
+
+  if (runtime === 'tmux') {
+    const uniqueTypes = [...new Set(portless.map((s) => s.type))];
+    await Promise.all(
+      uniqueTypes.map(async (type) => {
+        const result = await listWindows(type);
+        tmuxWindowsByType.set(type, result.success ? result.data : []);
+      }),
+    );
+  } else if (runtime === 'docker') {
+    dockerContainers = await getActiveContainers().catch(() => []);
+  }
+
+  return { tmuxWindowsByType, dockerContainers };
+}
+
+async function resolveStatus(
+  service: Service,
+  caches: SessionCaches,
+): Promise<ServiceStatus> {
   if (service.port) {
     if (await checkLivenessProbe(service)) {
       return 'RUNNING';
@@ -77,11 +144,29 @@ export async function getServiceStatus(
     return 'RUNNING';
   }
 
-  if (await checkServiceSessionExists(service)) {
+  if (sessionExistsForService(service, caches)) {
     return 'SESSION_EXISTS';
   }
 
   return 'STOPPED';
+}
+
+function sessionExistsForService(
+  service: Service,
+  caches: SessionCaches,
+): boolean {
+  const runtime = store.get('runtime');
+
+  switch (runtime) {
+    case 'tmux': {
+      const windows = caches.tmuxWindowsByType.get(service.type) ?? [];
+      return windows.includes(service.name);
+    }
+    case 'docker':
+      return caches.dockerContainers.some((c) => c.includes(service.name));
+    default:
+      throw new Error(`Invalid runtime "${runtime}" specified in config`);
+  }
 }
 
 async function printWatchAllStatus(services: Service[], watch: number) {
@@ -130,27 +215,6 @@ async function checkLivenessProbe(service: Service): Promise<boolean> {
   }
 
   return false;
-}
-
-async function checkServiceSessionExists(service: Service): Promise<boolean> {
-  const runtime = store.get('runtime');
-
-  switch (runtime) {
-    case 'tmux':
-      const windowsResult = await listWindows(service.type);
-
-      if (!windowsResult.success) {
-        return false;
-      }
-
-      return windowsResult.data.includes(service.name);
-    case 'docker':
-      const containers = await getActiveContainers();
-
-      return containers.some((container) => container.includes(service.name));
-    default:
-      throw new Error(`Invalid runtime "${runtime}" specified in config`);
-  }
 }
 
 export default new Command('status')

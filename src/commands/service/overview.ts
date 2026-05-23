@@ -9,7 +9,7 @@ import {
   createBox,
   printBoxes,
 } from '../../lib/box.js';
-import { ServiceStatus } from './status.js';
+import { getServiceStatusBulk, ServiceStatus } from './status.js';
 import { chunkArray } from '../../utils/prettyPrintKeyValue.js';
 import { getServiceInfo, ServiceInfo } from './info.js';
 import {
@@ -72,11 +72,18 @@ async function refresh(paneId: string | null): Promise<void> {
   const spinner = ora('Fetching service info...').start();
 
   const services = store.get('services') ?? [];
-  const serviceInfos = await Promise.all(
-    services.map((service) =>
-      getServiceInfo({ serviceName: service.name, status: true }),
+  const [serviceInfos, statusByName] = await Promise.all([
+    Promise.all(
+      services.map((service) =>
+        getServiceInfo({ serviceName: service.name, status: false }),
+      ),
     ),
-  );
+    getServiceStatusBulk(services.map((service) => service.name)),
+  ]);
+
+  for (const info of serviceInfos) {
+    info.status = statusByName.get(info.service);
+  }
 
   const sorted = serviceInfos.sort((a, b) =>
     a.service.localeCompare(b.service),
