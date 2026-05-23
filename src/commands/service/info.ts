@@ -1,8 +1,8 @@
 import { Command } from '@commander-js/extra-typings';
 import path from 'node:path';
-import { promises as fs } from 'node:fs';
 import chalk from 'chalk';
 
+import { readFile, readJsonFile, stat } from '../../lib/file.js';
 import { getServiceStatus, ServiceStatus, statusMap } from './status.js';
 import { withErrorHandler } from '../../utils/errorHandler.js';
 import store, { Runtime, ServiceType } from '../../utils/store.js';
@@ -98,44 +98,42 @@ export async function getServiceInfo({
 }
 
 async function readGitBranch(repoPath: string): Promise<string> {
-  try {
-    let gitDir = path.join(repoPath, '.git');
-    const stat = await fs.stat(gitDir);
+  const branchFallback = '⚠️ Could not determine the current working branch';
 
-    // Worktrees and submodules use a `.git` file pointing at the real gitdir.
-    if (stat.isFile()) {
-      const pointer = await fs.readFile(gitDir, 'utf8');
-      const match = pointer.match(/^gitdir:\s*(.+)$/m);
-      if (!match) throw new Error('Malformed .git file');
-      gitDir = path.resolve(repoPath, match[1].trim());
-    }
+  let gitDir = path.join(repoPath, '.git');
+  const statResult = await stat(gitDir);
+  if (!statResult.success) return branchFallback;
 
-    const head = (await fs.readFile(path.join(gitDir, 'HEAD'), 'utf8')).trim();
-    const branchMatch = head.match(/^ref: refs\/heads\/(.+)$/);
-    return branchMatch ? branchMatch[1] : 'HEAD';
-  } catch {
-    return '⚠️ Could not determine the current working branch';
+  // Worktrees and submodules use a `.git` file pointing at the real gitdir.
+  if (statResult.data.isFile()) {
+    const pointerResult = await readFile(gitDir);
+    if (!pointerResult.success) return branchFallback;
+    const match = pointerResult.data.match(/^gitdir:\s*(.+)$/m);
+    if (!match) return branchFallback;
+    gitDir = path.resolve(repoPath, match[1].trim());
   }
+
+  const headResult = await readFile(path.join(gitDir, 'HEAD'));
+  if (!headResult.success) return branchFallback;
+
+  const branchMatch = headResult.data.trim().match(/^ref: refs\/heads\/(.+)$/);
+  return branchMatch ? branchMatch[1] : 'HEAD';
 }
 
 async function readPackageJson(
   repoPath: string,
 ): Promise<Record<string, unknown> | null> {
-  try {
-    const raw = await fs.readFile(path.join(repoPath, 'package.json'), 'utf8');
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
+  const result = await readJsonFile<Record<string, unknown>>(
+    path.join(repoPath, 'package.json'),
+  );
+  return result.success ? result.data : null;
 }
 
 async function readNvmrc(repoPath: string): Promise<string> {
-  try {
-    const raw = await fs.readFile(path.join(repoPath, '.nvmrc'), 'utf8');
-    return raw.trim();
-  } catch {
-    return '⚠️ Could not determine the node version';
-  }
+  const result = await readFile(path.join(repoPath, '.nvmrc'));
+  return result.success
+    ? result.data.trim()
+    : '⚠️ Could not determine the node version';
 }
 
 // Mirrors `jq -r`: null/undefined become the string "null", everything else is stringified.
