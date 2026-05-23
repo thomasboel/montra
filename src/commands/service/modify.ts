@@ -3,7 +3,7 @@ import { Command } from '@commander-js/extra-typings';
 import store, { RUNTIMES, SERVICE_TYPES } from '../../utils/store.js';
 import { withErrorHandler } from '../../utils/errorHandler.js';
 import inquirer from 'inquirer';
-import { getServiceStatus } from './status.js';
+import { getServiceStatus } from '../../lib/serviceStatus.js';
 
 export async function modify(serviceName: string): Promise<void> {
   const service = store

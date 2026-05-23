@@ -1,4 +1,4 @@
-import { getServiceStatus } from './commands/service/status.js';
+import { getServiceStatus } from './lib/serviceStatus.js';
 import store from './utils/store.js';
 import { notify } from './utils/notify.js';
 

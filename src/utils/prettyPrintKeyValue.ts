@@ -66,7 +66,7 @@ export function printBoxesSideBySide(...texts: string[]) {
   }
 }
 
-export function chunkArray(arr: any[], size: number) {
+export function chunkArray<T>(arr: T[], size: number): T[][] {
   if (size <= 0) throw new Error('Size must be greater than 0');
 
   const result = [];

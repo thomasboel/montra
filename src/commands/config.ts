@@ -3,7 +3,7 @@ import ora from 'ora';
 
 import store, { Config, configValidators } from '../utils/store.js';
 import { withErrorHandler } from '../utils/errorHandler.js';
-import { getServiceStatus } from './service/status.js';
+import { getServiceStatus } from '../lib/serviceStatus.js';
 
 const setConfig = new Command('set')
   .description('Update a configuration value')

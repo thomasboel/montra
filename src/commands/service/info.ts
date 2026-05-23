@@ -3,7 +3,11 @@ import path from 'node:path';
 import chalk from 'chalk';
 
 import { readFile, readJsonFile, stat } from '../../lib/file.js';
-import { getServiceStatus, ServiceStatus, statusMap } from './status.js';
+import {
+  getServiceStatus,
+  ServiceStatus,
+  statusMap,
+} from '../../lib/serviceStatus.js';
 import { withErrorHandler } from '../../utils/errorHandler.js';
 import store, { Runtime, ServiceType } from '../../utils/store.js';
 import ora from 'ora';

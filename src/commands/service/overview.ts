@@ -9,7 +9,10 @@ import {
   createBox,
   printBoxes,
 } from '../../lib/box.js';
-import { getServiceStatusBulk, ServiceStatus } from './status.js';
+import {
+  getServiceStatusBulk,
+  ServiceStatus,
+} from '../../lib/serviceStatus.js';
 import { chunkArray } from '../../utils/prettyPrintKeyValue.js';
 import { getServiceInfo, ServiceInfo } from './info.js';
 import {

@@ -2,7 +2,7 @@ import { Command } from '@commander-js/extra-typings';
 import path from 'node:path';
 import ora from 'ora';
 
-import { getServiceStatus } from './status.js';
+import { getServiceStatus } from '../../lib/serviceStatus.js';
 import { newSession, newWindow, sessionExists } from '../../lib/tmux/tmux.js';
 import { dockerComposeUp } from '../../lib/docker/dockerCompose.js';
 import { findComposeServiceByImage } from '../../utils/findComposeServiceByImage.js';
