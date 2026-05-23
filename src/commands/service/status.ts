@@ -5,7 +5,10 @@ import { execute } from '../../lib/exec.js';
 import { listWindows } from '../../lib/tmux/tmux.js';
 import store, { Service, ServiceType } from '../../utils/store.js';
 import { withErrorHandler } from '../../utils/errorHandler.js';
+import { parallelMap } from '../../utils/parallelMap.js';
 import { getActiveContainers } from '../../lib/docker/docker.js';
+
+const STATUS_CONCURRENCY = 8;
 import {
   chunkArray,
   padLabel,
@@ -83,11 +86,13 @@ export async function getServiceStatusBulk(
 
   const caches = await buildSessionCaches(services.map((s) => s.service));
 
-  const entries = await Promise.all(
-    services.map(async ({ input, service }) => {
+  const entries = await parallelMap(
+    services,
+    STATUS_CONCURRENCY,
+    async ({ input, service }) => {
       const status = await resolveStatus(service, caches);
       return [input, status] as const;
-    }),
+    },
   );
 
   return new Map(entries);
